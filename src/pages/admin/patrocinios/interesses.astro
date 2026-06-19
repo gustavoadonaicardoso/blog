@@ -1,0 +1,87 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+
+const authRedirect = await requireAuth(Astro.cookies);
+if (authRedirect) return authRedirect;
+
+const supabase = createClient(Astro.cookies);
+
+// Handle mark-as-read
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const id = form.get('id') as string;
+  if (id) {
+    await supabase.from('sponsor_interests').update({ read: true }).eq('id', id);
+  }
+  return Astro.redirect('/admin/patrocinios/interesses', 302);
+}
+
+const { data: interests } = await supabase
+  .from('sponsor_interests')
+  .select('*')
+  .order('created_at', { ascending: false });
+---
+
+<AdminLayout title="Interesses de Patrocínio">
+  <div class="actions">
+    <a href="/admin/patrocinios" class="btn btn-secondary">← Voltar</a>
+  </div>
+
+  <div class="card" style="padding: 0; overflow: hidden;">
+    {interests && interests.length > 0 ? (
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Empresa</th>
+            <th>E-mail</th>
+            <th>Site</th>
+            <th>Mensagem</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {interests.map((item) => (
+            <tr style={!item.read ? 'background: #fafaff;' : ''}>
+              <td style="font-weight: 600; white-space: nowrap;">{item.company_name}</td>
+              <td style="font-size: 0.85rem;">
+                <a href={`mailto:${item.email}`}>{item.email}</a>
+              </td>
+              <td style="font-size: 0.82rem;">
+                {item.website ? (
+                  <a href={item.website} target="_blank" rel="noopener">{item.website}</a>
+                ) : '—'}
+              </td>
+              <td style="max-width: 220px; font-size: 0.875rem; color: var(--color-muted);">
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">
+                  {item.message ?? '—'}
+                </div>
+              </td>
+              <td style="font-size: 0.82rem; color: var(--color-muted); white-space: nowrap;">
+                {new Date(item.created_at).toLocaleDateString('pt-BR')}
+              </td>
+              <td>
+                <span class={`badge ${item.read ? 'badge-gray' : 'badge'}`}>
+                  {item.read ? 'Lido' : 'Novo'}
+                </span>
+              </td>
+              <td>
+                {!item.read && (
+                  <form method="POST">
+                    <input type="hidden" name="id" value={item.id} />
+                    <button type="submit" class="btn btn-secondary btn-sm">Marcar lido</button>
+                  </form>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p style="padding: 2rem; color: var(--color-muted);">Nenhum interesse de patrocínio recebido.</p>
+    )}
+  </div>
+</AdminLayout>

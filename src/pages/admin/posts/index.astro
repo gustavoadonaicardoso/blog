@@ -1,0 +1,78 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+
+const authRedirect = await requireAuth(Astro.cookies);
+if (authRedirect) return authRedirect;
+
+const supabase = createClient(Astro.cookies);
+
+const { data: posts } = await supabase
+  .from('posts')
+  .select('id, title, slug, published, is_sponsored, created_at')
+  .order('created_at', { ascending: false });
+
+const deleted = Astro.url.searchParams.get('excluido') === '1';
+---
+
+<AdminLayout title="Posts">
+  {deleted && (
+    <div class="alert alert-success">Post excluído com sucesso.</div>
+  )}
+
+  <div class="actions">
+    <a href="/admin/posts/novo" class="btn btn-primary">+ Novo post</a>
+  </div>
+
+  <div class="card" style="padding: 0; overflow: hidden;">
+    {posts && posts.length > 0 ? (
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Slug</th>
+            <th>Status</th>
+            <th>Tipo</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {posts.map((post) => (
+            <tr>
+              <td style="font-weight: 600; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {post.title}
+              </td>
+              <td style="font-size: 0.8rem; color: var(--color-muted);">{post.slug}</td>
+              <td>
+                <span class={`badge ${post.published ? 'badge-green' : 'badge-gray'}`}>
+                  {post.published ? 'Publicado' : 'Rascunho'}
+                </span>
+              </td>
+              <td>
+                {post.is_sponsored && (
+                  <span class="badge">Patrocinado</span>
+                )}
+              </td>
+              <td style="font-size: 0.82rem; color: var(--color-muted); white-space: nowrap;">
+                {new Date(post.created_at).toLocaleDateString('pt-BR')}
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <a href={`/admin/posts/${post.id}`} class="btn btn-secondary btn-sm">Editar</a>
+                  <form method="POST" action="/api/admin/posts/excluir" onsubmit="return confirm('Excluir este post?')">
+                    <input type="hidden" name="id" value={post.id} />
+                    <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p style="padding: 2rem; color: var(--color-muted);">Nenhum post criado ainda.</p>
+    )}
+  </div>
+</AdminLayout>

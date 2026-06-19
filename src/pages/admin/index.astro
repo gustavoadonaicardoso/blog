@@ -1,0 +1,53 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../lib/auth';
+import { createClient } from '../../lib/supabase';
+
+const authRedirect = await requireAuth(Astro.cookies);
+if (authRedirect) return authRedirect;
+
+const supabase = createClient(Astro.cookies);
+
+const [
+  { count: totalPosts },
+  { count: sponsoredPosts },
+  { count: unreadMessages },
+  { count: unreadInterests },
+] = await Promise.all([
+  supabase.from('posts').select('*', { count: 'exact', head: true }),
+  supabase.from('posts').select('*', { count: 'exact', head: true }).eq('is_sponsored', true).eq('published', true),
+  supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('read', false),
+  supabase.from('sponsor_interests').select('*', { count: 'exact', head: true }).eq('read', false),
+]);
+---
+
+<AdminLayout title="Dashboard">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{totalPosts ?? 0}</div>
+      <div class="stat-label">Posts totais</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{sponsoredPosts ?? 0}</div>
+      <div class="stat-label">Patrocinados ativos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{unreadMessages ?? 0}</div>
+      <div class="stat-label">Mensagens não lidas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{unreadInterests ?? 0}</div>
+      <div class="stat-label">Interesses de patrocínio</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-family: Georgia, serif; font-size: 1.1rem; margin-bottom: 1rem;">Ações rápidas</h2>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="/admin/posts/novo" class="btn btn-primary">+ Novo post</a>
+      <a href="/admin/posts" class="btn btn-secondary">Ver posts</a>
+      <a href="/admin/mensagens" class="btn btn-secondary">Ver mensagens</a>
+      <a href="/admin/patrocinios" class="btn btn-secondary">Ver patrocínios</a>
+    </div>
+  </div>
+</AdminLayout>

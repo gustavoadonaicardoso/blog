@@ -1,0 +1,128 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PostCard from '../components/PostCard.astro';
+import { createClient } from '../lib/supabase';
+
+const supabase = createClient(Astro.cookies);
+
+const { data: posts } = await supabase
+  .from('posts')
+  .select('id, title, slug, excerpt, created_at, is_sponsored, sponsor_name')
+  .eq('published', true)
+  .order('created_at', { ascending: false })
+  .limit(6);
+---
+
+<Layout title="Vórtice" description="Ideias que giram.">
+  <section class="hero">
+    <h1 class="hero-title">Vórtice</h1>
+    <p class="hero-tagline">Ideias que giram.</p>
+    <p class="hero-description">
+      Um espaço para reflexões sobre tecnologia, cultura e o tempo em que vivemos.
+    </p>
+  </section>
+
+  <section class="posts-section">
+    <h2 class="section-heading">Últimos artigos</h2>
+
+    {posts && posts.length > 0 ? (
+      <div class="posts-list">
+        {posts.map((post) => (
+          <PostCard
+            title={post.title}
+            slug={post.slug}
+            excerpt={post.excerpt}
+            created_at={post.created_at}
+            is_sponsored={post.is_sponsored}
+            sponsor_name={post.sponsor_name}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">Nenhum artigo publicado ainda.</p>
+    )}
+
+    <div class="all-posts-link">
+      <a href="/artigos" class="btn btn-secondary">Ver todos os artigos →</a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    padding: 3.5rem 0 3rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 3rem;
+  }
+
+  .hero-title {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--color-text);
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-tagline {
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    color: var(--color-accent);
+    font-style: italic;
+    margin-bottom: 1rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+    color: var(--color-muted);
+    max-width: 480px;
+    line-height: 1.65;
+  }
+
+  .section-heading {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .posts-list {
+    margin-top: 0.5rem;
+  }
+
+  .empty-state {
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    padding: 2rem 0;
+  }
+
+  .all-posts-link {
+    margin-top: 2.5rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    background: transparent;
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    background: var(--color-accent-light);
+    text-decoration: none;
+  }
+</style>
