@@ -1,0 +1,189 @@
+---
+import { getSession } from '../../lib/auth';
+
+// Redirect if already logged in
+const session = await getSession(Astro.cookies);
+if (session) {
+  return Astro.redirect('/admin', 302);
+}
+
+const error = Astro.url.searchParams.get('erro');
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Vórtice Admin</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --color-accent: #5c4de0;
+        --color-accent-light: #ede9ff;
+        --color-border: #e8e8e8;
+        --color-text: #111;
+        --color-muted: #666;
+        --font-serif: Georgia, serif;
+        --font-sans: system-ui, -apple-system, sans-serif;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background: #f8f8f8;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .login-card {
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        padding: 2.5rem 2.25rem;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-brand {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .login-brand h1 {
+        font-family: var(--font-serif);
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--color-text);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.25rem;
+      }
+
+      .login-brand p {
+        font-size: 0.82rem;
+        color: var(--color-muted);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .form-group {
+        margin-bottom: 1.1rem;
+      }
+
+      label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: var(--color-text);
+      }
+
+      input {
+        width: 100%;
+        padding: 0.65rem 0.9rem;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-family: var(--font-sans);
+        font-size: 0.95rem;
+        color: var(--color-text);
+        background: #fff;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      input:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(92,77,224,0.1);
+      }
+
+      .btn {
+        width: 100%;
+        padding: 0.7rem 1.4rem;
+        border-radius: 6px;
+        font-family: var(--font-sans);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: var(--color-accent);
+        color: #fff;
+        margin-top: 0.5rem;
+        transition: background 0.15s;
+      }
+
+      .btn:hover { background: #4a3cc0; }
+
+      .alert-error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.82rem;
+        color: var(--color-muted);
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        color: var(--color-accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <div class="login-brand">
+        <h1>Vórtice</h1>
+        <p>Painel Administrativo</p>
+      </div>
+
+      {error === 'credenciais' && (
+        <div class="alert-error">E-mail ou senha inválidos.</div>
+      )}
+      {error === 'erro' && (
+        <div class="alert-error">Ocorreu um erro. Tente novamente.</div>
+      )}
+
+      <form method="POST" action="/api/admin/login">
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            placeholder="admin@exemplo.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button type="submit" class="btn">Entrar</button>
+      </form>
+
+      <a href="/" class="back-link">← Voltar ao blog</a>
+    </div>
+  </body>
+</html>
