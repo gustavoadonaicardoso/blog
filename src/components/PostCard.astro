@@ -1,0 +1,117 @@
+---
+export interface Props {
+  title: string;
+  slug: string;
+  excerpt?: string;
+  created_at: string;
+  is_sponsored?: boolean;
+  sponsor_name?: string;
+}
+
+const { title, slug, excerpt, created_at, is_sponsored, sponsor_name } = Astro.props;
+
+const date = new Date(created_at).toLocaleDateString('pt-BR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<article class="post-card">
+  <span class="post-index" aria-hidden="true"></span>
+  <div class="post-body">
+  <div class="post-meta">
+    <time datetime={created_at}>{date}</time>
+    {is_sponsored && (
+      <span class="badge-sponsored">Patrocinado{sponsor_name ? ` por ${sponsor_name}` : ''}</span>
+    )}
+  </div>
+  <h2 class="post-title">
+    <a href={`/artigos/${slug}`}>{title}</a>
+  </h2>
+  {excerpt && <p class="post-excerpt">{excerpt}</p>}
+  <a href={`/artigos/${slug}`} class="read-more" aria-label={`Ler: ${title}`}>Ler artigo <span>↗</span></a>
+  </div>
+  <a href={`/artigos/${slug}`} class="post-arrow" tabindex="-1" aria-hidden="true">↗</a>
+</article>
+
+<style>
+  .post-card {
+    position:relative;display:grid;grid-template-columns:36px 1fr auto;gap:1.2rem;align-items:start;padding:2.25rem 1rem;
+    border-bottom: 1px solid var(--color-border, #e8e8e8);
+  }
+  .post-card{transition:background .25s ease,padding .25s ease}.post-card:hover{background:linear-gradient(90deg,rgba(155,135,255,.07),transparent 72%);padding-left:1.4rem}.post-index::before{content:'//';font:400 .62rem var(--font-mono);color:#625e6b}.post-body{min-width:0}.post-arrow{align-self:center;display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--color-border);border-radius:50%;color:var(--color-muted);transition:.2s ease}.post-card:hover .post-arrow{color:var(--color-cyan);border-color:rgba(110,231,242,.35);transform:rotate(8deg)}
+
+  .post-card:last-child {
+    border-bottom: none;
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  time {
+    font:400 .67rem var(--font-mono);
+    color: var(--color-muted, #666);
+    letter-spacing: 0.01em;
+  }
+
+  .badge-sponsored {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.2em 0.6em;
+    border-radius: 999px;
+    background: var(--color-accent-light, #ede9ff);
+    color: var(--color-accent, #5c4de0);
+  }
+
+  .post-title {
+    font-family: var(--font-serif, Georgia, serif);
+    font-size:clamp(1.35rem,2.7vw,1.85rem);font-weight:600;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-title a {
+    color: var(--color-text, #111);
+    text-decoration: none;
+  }
+
+  .post-title a:hover {
+    color:var(--color-cyan,#6ee7f2);
+  }
+
+  .post-excerpt {
+    font-size: 0.95rem;
+    color:var(--color-muted,#9896a3);max-width:760px;
+    line-height: 1.65;
+    margin-bottom: 0.85rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .read-more {
+    display:none;font-size:.75rem;
+    font-weight: 600;
+    color: var(--color-accent, #5c4de0);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+  }
+  .read-more span{margin-left:.35rem}@media(max-width:640px){.post-card{grid-template-columns:24px 1fr;padding:1.7rem 0}.post-card:hover{padding-left:.4rem}.post-arrow{display:none}.post-excerpt{-webkit-line-clamp:2}.post-index::before{font-size:.55rem}}
+
+  /* More breathing room between entries */
+  .post-card{grid-template-columns:40px 1fr auto;gap:1.75rem;padding:2.75rem 1.25rem}.post-card:hover{background:linear-gradient(90deg,rgba(108,77,230,.055),transparent 72%);padding-left:1.65rem}.post-meta,.post-title{margin-bottom:.8rem}.post-excerpt{margin-bottom:1rem}
+  @media(max-width:640px){.post-card{grid-template-columns:20px 1fr;gap:.8rem;padding:2rem 0}.post-card:hover{padding-left:.3rem}.post-excerpt{-webkit-line-clamp:3}}
+  .read-more:hover {
+    text-decoration: underline;
+  }
+</style>

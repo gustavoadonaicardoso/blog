@@ -1,0 +1,77 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../lib/auth';
+import { createClient } from '../../lib/supabase';
+
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+
+const supabase = createClient(Astro.cookies, Astro.request);
+
+const [
+  { count: totalPosts },
+  { count: sponsoredPosts },
+  { count: unreadMessages },
+  { count: unreadInterests },
+] = await Promise.all([
+  supabase.from('posts').select('*', { count: 'exact', head: true }),
+  supabase.from('posts').select('*', { count: 'exact', head: true }).eq('is_sponsored', true).eq('published', true),
+  supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('read', false),
+  supabase.from('sponsor_interests').select('*', { count: 'exact', head: true }).eq('read', false),
+]);
+---
+
+<AdminLayout title="Dashboard">
+  <section class="welcome">
+    <div><span class="welcome-tag">VISÃO GERAL</span><h2>Seu conteúdo,<br /><em>em movimento.</em></h2></div>
+    <p>Acompanhe a atividade editorial e acesse rapidamente as principais áreas do Vórtice.</p>
+  </section>
+
+  <div class="stats-grid">
+    <a href="/admin/posts" class="stat-card">
+      <span class="stat-index">01</span>
+      <div class="stat-value">{totalPosts ?? 0}</div>
+      <div class="stat-label">Posts totais</div>
+    </a>
+    <a href="/admin/patrocinios" class="stat-card">
+      <span class="stat-index">02</span>
+      <div class="stat-value">{sponsoredPosts ?? 0}</div>
+      <div class="stat-label">Patrocinados ativos</div>
+    </a>
+    <a href="/admin/mensagens" class="stat-card">
+      <span class="stat-index">03</span>
+      <div class="stat-value">{unreadMessages ?? 0}</div>
+      <div class="stat-label">Mensagens não lidas</div>
+    </a>
+    <a href="/admin/patrocinios/interesses" class="stat-card">
+      <span class="stat-index">04</span>
+      <div class="stat-value">{unreadInterests ?? 0}</div>
+      <div class="stat-label">Interesses de patrocínio</div>
+    </a>
+  </div>
+
+  <div class="workspace-grid">
+    <section class="card quick-actions">
+      <div class="section-title"><div><span>ATALHOS</span><h2>Ações rápidas</h2></div><span class="section-code">CTRL / 01</span></div>
+      <div class="action-list">
+        <a href="/admin/posts/novo"><span class="action-icon">+</span><span><strong>Novo artigo</strong><small>Crie e publique uma nova ideia</small></span><b>↗</b></a>
+        <a href="/admin/posts"><span class="action-icon">≡</span><span><strong>Gerenciar conteúdo</strong><small>Edite publicações e rascunhos</small></span><b>↗</b></a>
+        <a href="/admin/mensagens"><span class="action-icon">○</span><span><strong>Caixa de entrada</strong><small>Veja as mensagens dos leitores</small></span><b>↗</b></a>
+      </div>
+    </section>
+  </div>
+</AdminLayout>
+
+<style>
+  .welcome{display:flex;align-items:flex-end;justify-content:space-between;gap:3rem;margin-bottom:2.5rem;padding:2.25rem 0 3rem;border-bottom:1px solid var(--color-border)}.welcome-tag,.section-title span,.section-code{font:500 .59rem var(--font-mono);letter-spacing:.12em;color:var(--color-accent)}.welcome h2{margin-top:.75rem;font-size:clamp(2.3rem,4.7vw,4.4rem);letter-spacing:-.06em}.welcome h2 em{font-style:normal;background:linear-gradient(100deg,#7655df,#087f8c);background-clip:text;-webkit-background-clip:text;color:transparent}.welcome p{max-width:390px;color:var(--color-muted);font-size:.88rem;line-height:1.75}
+  .stat-card{text-decoration:none;transition:transform .2s,border-color .2s,box-shadow .2s}.stat-card:hover{transform:translateY(-3px);border-color:rgba(108,77,230,.3);box-shadow:0 12px 34px rgba(45,28,100,.07);text-decoration:none}.stat-index{display:block;margin-bottom:1.35rem;font:500 .58rem var(--font-mono);color:#aaa5b0}.stat-value{color:var(--color-text)}
+  .workspace-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(260px,.45fr);gap:1.15rem;margin-top:1.15rem}.section-title{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem}.section-title h2{margin-top:.4rem;font-size:1.25rem;letter-spacing:-.03em}.section-code{color:#aaa5b0}.action-list{display:grid}.action-list a{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:1rem;padding:1rem 0;border-top:1px solid var(--color-border);color:var(--color-text);text-decoration:none}.action-list a:last-child{padding-bottom:0}.action-icon{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--color-border);border-radius:50%;font:400 1rem var(--font-mono);transition:.2s}.action-list strong{display:block;font-size:.8rem}.action-list small{display:block;margin-top:.15rem;color:var(--color-muted);font-size:.7rem}.action-list b{color:#aaa5b0;font-weight:400;transition:.2s}.action-list a:hover .action-icon{background:var(--color-accent-light);border-color:rgba(108,77,230,.3);color:var(--color-accent)}.action-list a:hover b{color:var(--color-accent);transform:rotate(8deg)}
+  .system-card{background:linear-gradient(150deg,#1b1624,#121018);color:#fff}.system-card .section-title h2{color:#fff}.live-dot{width:7px;height:7px;border-radius:50%;background:#58d6a0;box-shadow:0 0 9px #58d6a0}.system-orbit{height:120px;display:grid;place-items:center}.system-orbit::before,.system-orbit::after,.system-orbit span{content:'';position:absolute;border:1px solid rgba(148,121,255,.3);border-radius:50%}.system-orbit{position:relative}.system-orbit::before{width:105px;height:105px}.system-orbit::after{width:65px;height:65px;border-style:dashed}.system-orbit span{width:16px;height:16px;background:#8065ec;box-shadow:0 0 22px #8065ec}.system-info{display:flex;justify-content:space-between;padding:.75rem 0;border-top:1px solid rgba(255,255,255,.09);font:.57rem var(--font-mono);letter-spacing:.08em;color:#827b8d}.system-info strong{color:#d8d2df;font-weight:500}
+  /* Keep the main information inside the first viewport */
+  .welcome{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.55fr);align-items:center;gap:clamp(2rem,6vw,6rem);margin-bottom:1.75rem;padding:1.5rem 0 2.75rem}.welcome h2{margin-top:.65rem;font-size:clamp(2.5rem,4vw,3.65rem);line-height:1.02}.welcome p{font-size:.86rem}
+  @media(max-width:1100px){.workspace-grid{grid-template-columns:minmax(0,1.25fr) minmax(245px,.75fr)}}
+  @media(max-width:820px){.welcome{grid-template-columns:1fr;align-items:start;gap:1.25rem;padding-top:.75rem}.welcome p{max-width:560px}.workspace-grid{grid-template-columns:1fr}.system-card{min-height:290px}.system-orbit{height:105px}}
+  @media(max-width:560px){.welcome{padding:0 0 2.25rem;margin-bottom:1.5rem;gap:1rem}.welcome h2{font-size:clamp(2.25rem,12vw,3rem);line-height:1.02}.welcome p{font-size:.82rem}.stats-grid{grid-template-columns:1fr 1fr;gap:.75rem}.stat-card{min-width:0;padding:1.1rem}.stat-index{margin-bottom:.8rem}.stat-value{font-size:2.15rem}.stat-label{font-size:.53rem;line-height:1.45}.workspace-grid{margin-top:.75rem;gap:.75rem}.section-title{margin-bottom:1rem}.section-code{display:none}.action-list a{grid-template-columns:36px minmax(0,1fr) auto;gap:.75rem;padding:.9rem 0}.action-icon{width:36px;height:36px}.action-list small{white-space:normal;line-height:1.4}.system-card{min-height:auto}.system-orbit{height:110px}}
+  @media(max-width:360px){.stats-grid{grid-template-columns:1fr}}
+  .workspace-grid{grid-template-columns:1fr}
+</style>

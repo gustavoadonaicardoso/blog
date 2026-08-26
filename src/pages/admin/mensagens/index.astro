@@ -1,0 +1,77 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+
+const supabase = createClient(Astro.cookies, Astro.request);
+
+// Handle mark-as-read action
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const id = form.get('id') as string;
+  if (id) {
+    await supabase.from('contact_messages').update({ read: true }).eq('id', id);
+  }
+  return Astro.redirect('/admin/mensagens', 302);
+}
+
+const { data: messages } = await supabase
+  .from('contact_messages')
+  .select('*')
+  .order('created_at', { ascending: false });
+---
+
+<AdminLayout title="Mensagens de Contato">
+  <div class="card" style="padding: 0; overflow: hidden;">
+    {messages && messages.length > 0 ? (
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Mensagem</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {messages.map((msg) => (
+            <tr style={!msg.read ? 'background: #fafaff;' : ''}>
+              <td style="font-weight: 600; white-space: nowrap;">{msg.name}</td>
+              <td style="font-size: 0.85rem;">
+                <a href={`mailto:${msg.email}`}>{msg.email}</a>
+              </td>
+              <td style="max-width: 280px; font-size: 0.875rem; color: var(--color-muted);">
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px;">
+                  {msg.message}
+                </div>
+              </td>
+              <td style="font-size: 0.82rem; color: var(--color-muted); white-space: nowrap;">
+                {new Date(msg.created_at).toLocaleDateString('pt-BR')}
+              </td>
+              <td>
+                <span class={`badge ${msg.read ? 'badge-gray' : 'badge'}`}>
+                  {msg.read ? 'Lida' : 'Nova'}
+                </span>
+              </td>
+              <td>
+                {!msg.read && (
+                  <form method="POST">
+                    <input type="hidden" name="id" value={msg.id} />
+                    <button type="submit" class="btn btn-secondary btn-sm">Marcar lida</button>
+                  </form>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p style="padding: 2rem; color: var(--color-muted);">Nenhuma mensagem recebida ainda.</p>
+    )}
+  </div>
+</AdminLayout>

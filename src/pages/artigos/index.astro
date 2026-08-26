@@ -1,0 +1,112 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { createClient } from '../../lib/supabase';
+
+const PAGE_SIZE = 10;
+const pageParam = Astro.url.searchParams.get('pagina');
+const currentPage = Math.max(1, parseInt(pageParam ?? '1', 10));
+const from = (currentPage - 1) * PAGE_SIZE;
+const to = from + PAGE_SIZE - 1;
+
+const supabase = createClient(Astro.cookies, Astro.request);
+
+const { data: posts, count } = await supabase
+  .from('posts')
+  .select('id, title, slug, excerpt, created_at, is_sponsored, sponsor_name', { count: 'exact' })
+  .eq('published', true)
+  .order('created_at', { ascending: false })
+  .range(from, to);
+
+const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
+---
+
+<Layout title="Artigos" description="Todos os artigos publicados no Vórtice.">
+  <div class="page-header">
+    <h1>Artigos</h1>
+    {count !== null && count !== undefined && (
+      <p class="total">{count} {count === 1 ? 'artigo publicado' : 'artigos publicados'}</p>
+    )}
+  </div>
+
+  {posts && posts.length > 0 ? (
+    <div class="posts-list">
+      {posts.map((post) => (
+        <PostCard
+          title={post.title}
+          slug={post.slug}
+          excerpt={post.excerpt}
+          created_at={post.created_at}
+          is_sponsored={post.is_sponsored}
+          sponsor_name={post.sponsor_name}
+        />
+      ))}
+    </div>
+  ) : (
+    <p class="empty">Nenhum artigo publicado ainda.</p>
+  )}
+
+  {totalPages > 1 && (
+    <nav class="pagination" aria-label="Paginação">
+      {currentPage > 1 && (
+        <a href={`/artigos?pagina=${currentPage - 1}`} class="page-link">← Anterior</a>
+      )}
+      <span class="page-info">Página {currentPage} de {totalPages}</span>
+      {currentPage < totalPages && (
+        <a href={`/artigos?pagina=${currentPage + 1}`} class="page-link">Próxima →</a>
+      )}
+    </nav>
+  )}
+</Layout>
+
+<style>
+  .page-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .page-header h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(2.8rem, 7vw, 5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+
+  .total {
+    font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .empty {
+    color: var(--color-muted);
+    padding: 2rem 0;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .page-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .page-link:hover {
+    text-decoration: underline;
+  }
+
+  .page-info {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+  }
+</style>

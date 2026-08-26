@@ -1,0 +1,124 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PostCard from '../components/PostCard.astro';
+import { createClient } from '../lib/supabase';
+
+const supabase = createClient(Astro.cookies, Astro.request);
+
+const { data: posts } = await supabase
+  .from('posts')
+  .select('id, title, slug, excerpt, created_at, is_sponsored, sponsor_name')
+  .eq('published', true)
+  .order('created_at', { ascending: false })
+  .limit(6);
+---
+
+<Layout title="Vórtice" description="Ideias que giram.">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow"><span></span> Sinal aberto / 2026</div>
+      <h1 class="hero-title">Ideias que<br /><em>movem o agora.</em></h1>
+      <p class="hero-description">Um espaço independente para decodificar tecnologia, cultura e as transformações do nosso tempo.</p>
+      <div class="hero-actions"><a href="/artigos" class="btn btn-primary">Explorar artigos <span>↗</span></a><a href="/contato" class="text-link">Entrar em contato →</a></div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
+      <div class="core"></div><span class="coordinate coord-a">23°33'S</span><span class="coordinate coord-b">46°38'W</span><span class="coordinate coord-c">V.01</span>
+    </div>
+  </section>
+
+  <section class="posts-section">
+    <div class="section-header"><div><p class="section-kicker">Feed / Atualizações</p><h2 class="section-heading">Últimos artigos</h2></div><span class="section-count">{String(posts?.length ?? 0).padStart(2, '0')}</span></div>
+
+    {posts && posts.length > 0 ? (
+      <div class="posts-list">
+        {posts.map((post) => (
+          <PostCard
+            title={post.title}
+            slug={post.slug}
+            excerpt={post.excerpt}
+            created_at={post.created_at}
+            is_sponsored={post.is_sponsored}
+            sponsor_name={post.sponsor_name}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">Nenhum artigo publicado ainda.</p>
+    )}
+
+    <div class="all-posts-link">
+      <a href="/artigos" class="btn btn-secondary">Ver arquivo completo <span>↗</span></a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .hero { min-height: 560px; display:grid; grid-template-columns:1.2fr .8fr; align-items:center; gap:4rem; padding:2rem 0 6rem; border-bottom:1px solid var(--color-border); margin-bottom:4.5rem; }
+  .eyebrow,.section-kicker{font-family:var(--font-mono);font-size:.67rem;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted)}
+  .eyebrow{display:flex;align-items:center;gap:.55rem;margin-bottom:1.5rem}.eyebrow span{width:6px;height:6px;background:var(--color-cyan);border-radius:50%;box-shadow:0 0 10px var(--color-cyan)}
+
+  .hero-title {
+    font-family: var(--font-serif);
+    font-size: clamp(3.4rem, 7vw, 6.3rem); font-weight:600; letter-spacing:-.065em;
+    color: var(--color-text);
+    line-height: 1.1;
+    margin-bottom: 1.75rem;
+  }
+  .hero-title em{font-style:normal;background:linear-gradient(100deg,#7655df 10%,#087f8c 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .hero-description {
+    font-size: 1rem;
+    color: var(--color-muted);
+    max-width: 570px; line-height:1.75;
+  }
+  .hero-actions{display:flex;align-items:center;gap:1.5rem;margin-top:2rem}.hero-actions .btn span,.all-posts-link .btn span{margin-left:.55rem}.text-link{font-size:.78rem;font-weight:600;color:var(--color-muted)}.text-link:hover{color:var(--color-cyan)}
+  .hero-visual{position:relative;width:min(34vw,390px);aspect-ratio:1;justify-self:end;display:grid;place-items:center;filter:drop-shadow(0 0 50px rgba(126,96,255,.13))}.orbit{position:absolute;border:1px solid rgba(155,135,255,.3);border-radius:50%}.orbit-one{inset:7%;animation:spin 22s linear infinite}.orbit-one::after{content:'';position:absolute;top:11%;left:12%;width:8px;height:8px;border-radius:50%;background:var(--color-cyan);box-shadow:0 0 13px var(--color-cyan)}.orbit-two{inset:21%;border-color:rgba(110,231,242,.28);border-style:dashed;animation:spin 16s linear infinite reverse}.orbit-three{width:48%;height:82%;transform:rotate(48deg);border-color:rgba(255,255,255,.15)}.core{width:23%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 34% 30%,#bdb0ff,#7657f6 34%,#161222 72%);box-shadow:0 0 35px rgba(155,135,255,.55),inset -8px -10px 20px rgba(0,0,0,.55)}.coordinate{position:absolute;font:400 .55rem var(--font-mono);letter-spacing:.08em;color:#777382}.coord-a{top:4%;right:20%}.coord-b{bottom:10%;left:3%}.coord-c{right:1%;top:54%;color:var(--color-cyan)}@keyframes spin{to{transform:rotate(360deg)}}
+
+  .section-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:1.4rem;border-bottom:1px solid var(--color-border)}.section-heading {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color:var(--color-text);letter-spacing:-.04em;font-size:2rem;margin-top:.45rem;
+  }
+  .section-count{font:400 1rem var(--font-mono);color:var(--color-muted)}
+
+  .posts-list {
+    margin-top: 1rem;
+  }
+
+  .empty-state {
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    padding: 2rem 0;
+  }
+
+  .all-posts-link {
+    margin-top: 2.5rem;text-align:right;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding:.72rem 1.25rem;border-radius:999px;font-size:.79rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--color-accent);
+    color:var(--color-text);background:rgba(255,255,255,.035);
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    background:var(--color-accent-light);border-color:rgba(155,135,255,.55);transform:translateY(-2px);
+    text-decoration: none;
+  }
+  /* Spacing and responsive composition */
+  .orbit{border-color:rgba(108,77,230,.26)}.orbit-one::after{box-shadow:0 0 13px rgba(8,127,140,.4)}.orbit-two{border-color:rgba(8,127,140,.25)}.orbit-three{border-color:rgba(31,25,48,.14)}
+  .hero{min-height:620px;grid-template-columns:minmax(0,1.18fr) minmax(300px,.82fr);gap:clamp(3rem,7vw,7rem);padding:2.5rem 0 7.5rem;margin-bottom:6rem}
+  .hero-title{margin-bottom:2.25rem}.hero-description{max-width:590px;line-height:1.8}.hero-actions{flex-wrap:wrap;gap:1rem 1.75rem;margin-top:2.5rem}
+  .hero-visual{width:min(33vw,410px);min-width:300px}.section-header{gap:2rem;padding-bottom:1.75rem}.posts-list{margin-top:1.5rem}.all-posts-link{margin-top:3.5rem}.btn{background:#fff}
+  @media(max-width:980px){.hero{grid-template-columns:1fr;min-height:auto;padding:1.5rem 0 5.5rem;margin-bottom:4.5rem}.hero-copy{max-width:760px}.hero-visual{display:none}.hero-title{font-size:clamp(3.4rem,10vw,5.7rem)}.section-heading{font-size:1.8rem}}
+  @media(max-width:560px){.hero{padding-top:.5rem;padding-bottom:4.25rem;margin-bottom:3.75rem}.hero-title{font-size:clamp(2.85rem,14vw,4.2rem);margin-bottom:1.5rem}.hero-description{font-size:.96rem}.hero-actions{align-items:stretch;margin-top:2rem}.hero-actions .btn{width:100%}.text-link{padding:.55rem 0}.section-heading{font-size:1.55rem}.all-posts-link{text-align:left}.all-posts-link .btn{width:100%}}
+</style>

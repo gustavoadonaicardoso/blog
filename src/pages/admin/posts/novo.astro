@@ -1,0 +1,129 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+
+const error = Astro.url.searchParams.get('erro');
+---
+
+<AdminLayout title="Novo Post">
+  {error && (
+    <div class="alert alert-error">
+      {error === 'slug' ? 'Slug já existe. Escolha outro.' : 'Erro ao criar post. Tente novamente.'}
+    </div>
+  )}
+
+  <form method="POST" action="/api/admin/posts/criar">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="title">Título *</label>
+        <input type="text" id="title" name="title" required placeholder="Título do post" />
+      </div>
+
+      <div class="form-group">
+        <label for="slug">Slug *</label>
+        <input type="text" id="slug" name="slug" required placeholder="meu-post-aqui" pattern="[a-z0-9-]+" title="Use apenas letras minúsculas, números e hífens" />
+      </div>
+
+      <div class="form-group form-full">
+        <label for="excerpt">Resumo (excerpt)</label>
+        <textarea id="excerpt" name="excerpt" rows="3" placeholder="Breve descrição do post..." style="min-height: 80px;"></textarea>
+      </div>
+
+      <div class="form-group form-full">
+        <label for="content">Conteúdo (Markdown)</label>
+        <textarea id="content" name="content" placeholder="# Título&#10;&#10;Escreva seu conteúdo em Markdown..."></textarea>
+      </div>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="published" name="published" value="true" />
+      <label for="published">Publicar imediatamente</label>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="is_sponsored" name="is_sponsored" value="true" />
+      <label for="is_sponsored">Post patrocinado</label>
+    </div>
+
+    <div class="sponsor-fields" id="sponsorFields" style="display: none;">
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <h3 style="font-family: Georgia, serif; font-size: 0.95rem; margin-bottom: 1rem; color: var(--color-accent);">Informações do patrocinador</h3>
+
+        <div class="form-group">
+          <label for="sponsor_name">Nome do patrocinador *</label>
+          <input type="text" id="sponsor_name" name="sponsor_name" placeholder="Empresa XYZ" />
+        </div>
+
+        <div class="form-group">
+          <label for="sponsor_url">URL do patrocinador</label>
+          <input type="url" id="sponsor_url" name="sponsor_url" placeholder="https://empresa.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="sponsor_badge">Texto do badge</label>
+          <input type="text" id="sponsor_badge" name="sponsor_badge" placeholder="Patrocinado" />
+          <small style="color: var(--color-muted); font-size: 0.78rem; margin-top: 0.25rem; display: block;">Texto exibido no banner (padrão: "Patrocinado")</small>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+      <button type="submit" class="btn btn-primary">Criar post</button>
+      <a href="/admin/posts" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  const checkbox = document.getElementById('is_sponsored') as HTMLInputElement;
+  const fields = document.getElementById('sponsorFields') as HTMLDivElement;
+  const sponsorName = document.getElementById('sponsor_name') as HTMLInputElement;
+
+  function toggle() {
+    const show = checkbox.checked;
+    fields.style.display = show ? 'block' : 'none';
+    if (sponsorName) sponsorName.required = show;
+  }
+
+  checkbox.addEventListener('change', toggle);
+  toggle();
+
+  // Auto-generate slug from title
+  const titleInput = document.getElementById('title') as HTMLInputElement;
+  const slugInput = document.getElementById('slug') as HTMLInputElement;
+
+  titleInput.addEventListener('input', () => {
+    if (!slugInput.dataset.manual) {
+      slugInput.value = titleInput.value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+    }
+  });
+
+  slugInput.addEventListener('input', () => {
+    slugInput.dataset.manual = 'true';
+  });
+</script>
+
+<style>
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1.5rem;
+  }
+
+  .form-full {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>

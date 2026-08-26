@@ -1,0 +1,123 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+
+const { id } = Astro.params;
+const supabase = createClient(Astro.cookies, Astro.request);
+
+const { data: post } = await supabase
+  .from('posts')
+  .select('*')
+  .eq('id', id)
+  .single();
+
+if (!post) {
+  return Astro.redirect('/admin/posts', 302);
+}
+
+const saved = Astro.url.searchParams.get('ok') === '1';
+const error = Astro.url.searchParams.get('erro');
+---
+
+<AdminLayout title="Editar Post">
+  {saved && (
+    <div class="alert alert-success">Post atualizado com sucesso.</div>
+  )}
+  {error && (
+    <div class="alert alert-error">Erro ao atualizar post. Tente novamente.</div>
+  )}
+
+  <form method="POST" action="/api/admin/posts/atualizar">
+    <input type="hidden" name="id" value={post.id} />
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="title">Título *</label>
+        <input type="text" id="title" name="title" required value={post.title} />
+      </div>
+
+      <div class="form-group">
+        <label for="slug">Slug *</label>
+        <input type="text" id="slug" name="slug" required value={post.slug} pattern="[a-z0-9-]+" />
+      </div>
+
+      <div class="form-group form-full">
+        <label for="excerpt">Resumo</label>
+        <textarea id="excerpt" name="excerpt" rows="3" style="min-height: 80px;">{post.excerpt}</textarea>
+      </div>
+
+      <div class="form-group form-full">
+        <label for="content">Conteúdo (Markdown)</label>
+        <textarea id="content" name="content">{post.content}</textarea>
+      </div>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="published" name="published" value="true" checked={post.published} />
+      <label for="published">Publicado</label>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="is_sponsored" name="is_sponsored" value="true" checked={post.is_sponsored} />
+      <label for="is_sponsored">Post patrocinado</label>
+    </div>
+
+    <div class="sponsor-fields" id="sponsorFields" style={post.is_sponsored ? 'display: block;' : 'display: none;'}>
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <h3 style="font-family: Georgia, serif; font-size: 0.95rem; margin-bottom: 1rem; color: var(--color-accent);">Informações do patrocinador</h3>
+
+        <div class="form-group">
+          <label for="sponsor_name">Nome do patrocinador</label>
+          <input type="text" id="sponsor_name" name="sponsor_name" value={post.sponsor_name ?? ''} />
+        </div>
+
+        <div class="form-group">
+          <label for="sponsor_url">URL do patrocinador</label>
+          <input type="url" id="sponsor_url" name="sponsor_url" value={post.sponsor_url ?? ''} />
+        </div>
+
+        <div class="form-group">
+          <label for="sponsor_badge">Texto do badge</label>
+          <input type="text" id="sponsor_badge" name="sponsor_badge" value={post.sponsor_badge ?? ''} />
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+      <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      <a href="/admin/posts" class="btn btn-secondary">Cancelar</a>
+      <a href={`/artigos/${post.slug}`} target="_blank" class="btn btn-secondary">Ver post ↗</a>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  const checkbox = document.getElementById('is_sponsored') as HTMLInputElement;
+  const fields = document.getElementById('sponsorFields') as HTMLDivElement;
+
+  function toggle() {
+    fields.style.display = checkbox.checked ? 'block' : 'none';
+  }
+
+  checkbox.addEventListener('change', toggle);
+</script>
+
+<style>
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1.5rem;
+  }
+
+  .form-full {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
