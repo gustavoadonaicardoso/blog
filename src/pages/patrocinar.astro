@@ -48,7 +48,7 @@ const error = Astro.url.searchParams.get('erro');
 
     {error && (
       <div class="alert alert-error">
-        Ocorreu um erro. Tente novamente ou envie um e-mail diretamente.
+        {error === 'url' ? 'Confira as URLs informadas.' : error === 'anuncio' ? 'Preencha o título e o link do anúncio.' : 'Ocorreu um erro. Tente novamente ou envie um e-mail diretamente.'}
       </div>
     )}
 
@@ -72,6 +72,18 @@ const error = Astro.url.searchParams.get('erro');
         <label for="message">Mensagem (opcional)</label>
         <textarea id="message" name="message" rows="4" placeholder="Conte um pouco sobre o produto/serviço e como gostaria de patrocinar..."></textarea>
       </div>
+
+      <fieldset class="campaign-fields">
+        <legend>Proposta de anúncio <span>(opcional)</span></legend>
+        <p>Você pode enviar uma proposta agora. Ela só será publicada após nossa revisão.</p>
+        <div class="form-group"><label for="ad_title">Título do anúncio</label><input type="text" id="ad_title" name="ad_title" maxlength="90" placeholder="Uma chamada curta para sua campanha" /></div>
+        <div class="form-group"><label for="description">Descrição curta</label><input type="text" id="description" name="description" maxlength="160" placeholder="Explique a oferta em uma frase" /></div>
+        <div class="form-group"><label for="image_url">URL da imagem (desktop)</label><input type="url" id="image_url" name="image_url" placeholder="https://empresa.com/banner.jpg" /></div>
+        <div class="form-group"><label for="mobile_image_url">URL da imagem para celular</label><input type="url" id="mobile_image_url" name="mobile_image_url" placeholder="https://empresa.com/banner-mobile.jpg" /></div>
+        <div class="form-group"><label for="destination_url">Link de destino</label><input type="url" id="destination_url" name="destination_url" placeholder="https://empresa.com/oferta" /></div>
+        <div class="form-group"><label for="placement">Formato desejado</label><select id="placement" name="placement"><option value="inline">Banner dentro do artigo</option><option value="sticky">Faixa fixa inferior</option><option value="popup">Pop-up após 5 segundos</option></select></div>
+        <div class="form-group"><label for="article_slug">Slug do artigo específico</label><input type="text" id="article_slug" name="article_slug" placeholder="Deixe vazio para aparecer em qualquer artigo" /></div>
+      </fieldset>
 
       <button type="submit" class="btn btn-primary">Enviar interesse</button>
     </form>
@@ -158,6 +170,7 @@ const error = Astro.url.searchParams.get('erro');
     border-radius: 16px;
     background: var(--color-surface-soft);
   }
+  .campaign-fields{border:0;border-top:1px solid var(--color-border);margin:2rem 0 1.5rem;padding-top:1.5rem}.campaign-fields legend{padding-right:.7rem;font-family:var(--font-serif);font-weight:700}.campaign-fields legend span{font:400 .7rem var(--font-sans);color:var(--color-muted)}.campaign-fields>p{margin:.4rem 0 1.3rem;color:var(--color-muted);font-size:.82rem;line-height:1.5}
 
   .alert {
     padding: 0.85rem 1rem;

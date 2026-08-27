@@ -1,0 +1,47 @@
+<div class="newsletter-backdrop" id="newsletterPopup" hidden>
+  <section class="newsletter-dialog" role="dialog" aria-modal="true" aria-labelledby="newsletterTitle">
+    <button class="newsletter-close" type="button" aria-label="Fechar">×</button>
+    <span class="newsletter-kicker">Vórtice / Newsletter</span>
+    <h2 id="newsletterTitle">Ideias que chegam até você.</h2>
+    <p>Receba novos artigos, análises e novidades selecionadas pelo Vórtice.</p>
+    <form id="newsletterForm">
+      <label>Nome<input name="name" autocomplete="name" required minlength="2" maxlength="100" /></label>
+      <label>E-mail<input type="email" name="email" autocomplete="email" required maxlength="254" /></label>
+      <label>WhatsApp<input type="tel" name="whatsapp" autocomplete="tel" required minlength="10" maxlength="24" placeholder="(11) 99999-9999" /></label>
+      <label class="consent"><input type="checkbox" name="consent" required /><span>Autorizo o Vórtice a enviar newsletter, conteúdo e ofertas por e-mail e WhatsApp. Posso cancelar a qualquer momento.</span></label>
+      <p class="newsletter-status" role="status" aria-live="polite"></p>
+      <button class="newsletter-submit" type="submit">Quero receber →</button>
+    </form>
+    <a class="privacy-link" href="/privacidade">Como tratamos seus dados</a>
+  </section>
+</div>
+
+<script>
+  const popup = document.getElementById('newsletterPopup') as HTMLElement | null;
+  const form = document.getElementById('newsletterForm') as HTMLFormElement | null;
+  const status = popup?.querySelector('.newsletter-status') as HTMLElement | null;
+  const close = () => {
+    if (!popup) return;
+    popup.hidden = true; document.body.style.overflow = '';
+    localStorage.setItem('vortice_newsletter_dismissed', String(Date.now()));
+  };
+  const dismissedAt = Number(localStorage.getItem('vortice_newsletter_dismissed') ?? 0);
+  const canShow = !localStorage.getItem('vortice_newsletter_subscribed') && Date.now() - dismissedAt > 7 * 86400000;
+  if (popup && canShow) setTimeout(() => { popup.hidden = false; document.body.style.overflow = 'hidden'; popup.querySelector<HTMLInputElement>('input')?.focus(); }, 12000);
+  popup?.querySelector('.newsletter-close')?.addEventListener('click', close);
+  popup?.addEventListener('click', (event) => { if (event.target === popup) close(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && popup && !popup.hidden) close(); });
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault(); if (!status) return;
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const data = new FormData(form); button.disabled = true; status.textContent = 'Enviando…';
+    const response = await fetch('/api/newsletter/inscrever', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), email: data.get('email'), whatsapp: data.get('whatsapp'), consent: data.get('consent') === 'on' }) }).catch(() => null);
+    const result = response ? await response.json().catch(() => ({})) : {};
+    if (response?.ok) { status.textContent = 'Cadastro realizado. Bem-vindo ao Vórtice!'; localStorage.setItem('vortice_newsletter_subscribed', '1'); form.reset(); setTimeout(close, 1800); }
+    else { status.textContent = result.error ?? 'Não foi possível cadastrar agora.'; button.disabled = false; }
+  });
+</script>
+
+<style>
+  .newsletter-backdrop[hidden]{display:none}.newsletter-backdrop{position:fixed;z-index:80;inset:0;display:grid;place-items:center;padding:1rem;background:rgba(15,12,20,.58);backdrop-filter:blur(7px)}.newsletter-dialog{position:relative;width:min(480px,100%);max-height:calc(100vh - 2rem);overflow:auto;padding:2rem;border:1px solid rgba(108,77,230,.22);border-radius:22px;background:#fff;box-shadow:0 30px 90px rgba(20,12,45,.3)}.newsletter-close{position:absolute;top:.8rem;right:.9rem;width:34px;height:34px;border:0;border-radius:50%;background:#f2eff9;color:#514b5c;font-size:1.25rem;cursor:pointer}.newsletter-kicker{font:500 .6rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent)}.newsletter-dialog h2{margin:.7rem 2rem .6rem 0;font-size:2rem;letter-spacing:-.045em}.newsletter-dialog>p{margin-bottom:1.4rem;color:var(--color-muted);font-size:.86rem}.newsletter-dialog label:not(.consent){display:block;margin-bottom:.8rem;font-size:.7rem;font-weight:700}.newsletter-dialog input:not([type=checkbox]){display:block;width:100%;margin-top:.35rem;padding:.72rem .85rem;border:1px solid var(--color-border);border-radius:9px;font:inherit}.consent{display:flex;align-items:flex-start;gap:.55rem;margin:1rem 0;font-size:.67rem;line-height:1.5;color:var(--color-muted)}.consent input{flex:0 0 auto;margin-top:.18rem;accent-color:var(--color-accent)}.newsletter-submit{width:100%;padding:.8rem;border:0;border-radius:999px;background:linear-gradient(120deg,#6849dc,#8065ec);color:#fff;font-weight:700;cursor:pointer}.newsletter-submit:disabled{opacity:.6}.newsletter-status{min-height:1.2rem;margin:.2rem 0 .6rem!important;font-size:.7rem!important;color:var(--color-accent)!important}.privacy-link{display:block;margin-top:.8rem;text-align:center;font-size:.63rem;color:var(--color-muted)}@media(max-width:520px){.newsletter-dialog{padding:1.4rem}.newsletter-dialog h2{font-size:1.65rem}}
+</style>

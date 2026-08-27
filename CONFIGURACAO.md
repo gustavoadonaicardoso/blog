@@ -15,6 +15,27 @@ Siga os passos abaixo uma vez para colocar tudo no ar.
    - `Project URL`  →  `SUPABASE_URL`
    - `anon public`  →  `SUPABASE_ANON_KEY`
 
+Se o projeto Supabase já existia antes do gerenciador de anúncios, execute também
+[`supabase/ad_campaigns.sql`](supabase/ad_campaigns.sql) uma única vez no **SQL Editor**.
+
+Para ativar a captação de newsletter em um projeto existente, execute também
+[`supabase/marketing_leads.sql`](supabase/marketing_leads.sql) uma única vez.
+
+## Campanhas de anúncios
+
+- Empresas enviam propostas em `/patrocinar`; elas entram como pendentes.
+- O administrador revisa em `/admin/patrocinios` e pode aprovar, pausar ou revogar.
+- O botão **Nova campanha** permite cadastrar e agendar campanhas diretamente.
+- Formatos disponíveis: banner no artigo, faixa fixa inferior e pop-up após 5 segundos.
+- Imagens são informadas por URL. Use sempre arquivos HTTPS hospedados em origem confiável.
+
+## Newsletter, prospecção e cookies
+
+- O pop-up público coleta nome, e-mail, WhatsApp e autorização de marketing.
+- Os contatos ficam disponíveis em `/admin/leads` e podem ser exportados em CSV.
+- Contatos cancelados não entram na exportação e podem ser gerenciados no admin.
+- O aviso de cookies registra separadamente as preferências essenciais, de análise e marketing.
+
 ## 2. Resend (aviso por e-mail das mensagens de contato)
 
 1. Crie uma conta em <https://resend.com>.

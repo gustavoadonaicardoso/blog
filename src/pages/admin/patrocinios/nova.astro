@@ -1,0 +1,32 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+const id = Astro.url.searchParams.get('id');
+const supabase = createClient(Astro.cookies, Astro.request);
+const { data: campaign } = id ? await supabase.from('ad_campaigns').select('*').eq('id', id).single() : { data: null };
+const localDate = (value?: string | null) => value ? new Date(value).toISOString().slice(0, 16) : '';
+---
+<AdminLayout title={campaign ? 'Editar campanha' : 'Nova campanha'}>
+  <form method="POST" action="/api/admin/patrocinios/salvar" class="card campaign-form">
+    {campaign && <input type="hidden" name="id" value={campaign.id} />}
+    <div class="grid">
+      <div class="form-group"><label for="sponsor_name">Patrocinador *</label><input id="sponsor_name" name="sponsor_name" required value={campaign?.sponsor_name ?? ''} /></div>
+      <div class="form-group"><label for="contact_email">E-mail *</label><input type="email" id="contact_email" name="contact_email" required value={campaign?.contact_email ?? ''} /></div>
+      <div class="form-group full"><label for="title">Título *</label><input id="title" name="title" maxlength="90" required value={campaign?.title ?? ''} /></div>
+      <div class="form-group full"><label for="description">Descrição</label><input id="description" name="description" maxlength="160" value={campaign?.description ?? ''} /></div>
+      <div class="form-group"><label for="image_url">Imagem desktop</label><input type="url" id="image_url" name="image_url" value={campaign?.image_url ?? ''} /></div>
+      <div class="form-group"><label for="mobile_image_url">Imagem celular</label><input type="url" id="mobile_image_url" name="mobile_image_url" value={campaign?.mobile_image_url ?? ''} /></div>
+      <div class="form-group full"><label for="destination_url">Link de destino *</label><input type="url" id="destination_url" name="destination_url" required value={campaign?.destination_url ?? ''} /></div>
+      <div class="form-group"><label for="placement">Formato</label><select id="placement" name="placement"><option value="inline" selected={campaign?.placement === 'inline'}>Banner no artigo</option><option value="sticky" selected={campaign?.placement === 'sticky'}>Faixa fixa</option><option value="popup" selected={campaign?.placement === 'popup'}>Pop-up</option></select></div>
+      <div class="form-group"><label for="article_slug">Slug do artigo</label><input id="article_slug" name="article_slug" value={campaign?.article_slug ?? ''} placeholder="Vazio = todos" /></div>
+      <div class="form-group"><label for="starts_at">Início</label><input type="datetime-local" id="starts_at" name="starts_at" value={localDate(campaign?.starts_at)} /></div>
+      <div class="form-group"><label for="ends_at">Fim</label><input type="datetime-local" id="ends_at" name="ends_at" value={localDate(campaign?.ends_at)} /></div>
+    </div>
+    <div class="checks"><label><input type="checkbox" name="approved" value="true" checked={campaign?.approved ?? true} /> Aprovada</label><label><input type="checkbox" name="active" value="true" checked={campaign?.active ?? true} /> Ativa</label></div>
+    <div class="actions"><button class="btn btn-primary">Salvar campanha</button><a href="/admin/patrocinios" class="btn btn-secondary">Cancelar</a></div>
+  </form>
+</AdminLayout>
+<style>.campaign-form{max-width:900px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}.full{grid-column:1/-1}.checks,.actions{display:flex;gap:1rem;margin-top:1rem}.checks label{display:flex;align-items:center;gap:.45rem;font-size:.8rem}@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}</style>

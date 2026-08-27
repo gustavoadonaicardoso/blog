@@ -1,0 +1,53 @@
+---
+export interface Props {
+  campaign: {
+    id: string; sponsor_name: string; title: string; description?: string | null;
+    image_url?: string | null; mobile_image_url?: string | null;
+    destination_url: string; placement: 'inline' | 'sticky' | 'popup';
+  };
+}
+const { campaign } = Astro.props;
+---
+
+<aside class:list={['ad-campaign', `ad-${campaign.placement}`]} data-campaign-id={campaign.id} data-placement={campaign.placement} aria-label={`Publicidade de ${campaign.sponsor_name}`}>
+  {campaign.placement !== 'inline' && <button class="ad-close" type="button" aria-label="Fechar anúncio">×</button>}
+  <a class="ad-link" href={campaign.destination_url} target="_blank" rel="noopener sponsored">
+    {(campaign.image_url || campaign.mobile_image_url) && (
+      <picture>
+        {campaign.mobile_image_url && <source media="(max-width: 640px)" srcset={campaign.mobile_image_url} />}
+        {campaign.image_url && <img src={campaign.image_url} alt="" loading="lazy" />}
+      </picture>
+    )}
+    <span class="ad-copy"><small>Publicidade · {campaign.sponsor_name}</small><strong>{campaign.title}</strong>{campaign.description && <span>{campaign.description}</span>}<b>Saiba mais ↗</b></span>
+  </a>
+</aside>
+
+<script>
+  const report = (id: string, event: 'impression' | 'click') => fetch('/api/anuncios/evento', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, event }), keepalive: true,
+  }).catch(() => undefined);
+
+  document.querySelectorAll<HTMLElement>('.ad-campaign').forEach((ad) => {
+    if (ad.dataset.ready) return;
+    ad.dataset.ready = 'true';
+    const id = ad.dataset.campaignId!;
+    const placement = ad.dataset.placement;
+    if (placement === 'popup') {
+      const dismissed = sessionStorage.getItem(`ad-dismissed-${id}`);
+      if (!dismissed) setTimeout(() => ad.classList.add('is-visible'), 5000);
+    } else ad.classList.add('is-visible');
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { report(id, 'impression'); observer.disconnect(); }
+    }, { threshold: .5 });
+    observer.observe(ad);
+    ad.querySelector('.ad-link')?.addEventListener('click', () => report(id, 'click'));
+    ad.querySelector('.ad-close')?.addEventListener('click', () => {
+      ad.classList.remove('is-visible');
+      sessionStorage.setItem(`ad-dismissed-${id}`, '1');
+    });
+  });
+</script>
+
+<style>
+  .ad-campaign{display:none;position:relative;background:#fff;border:1px solid var(--color-border);border-radius:16px;box-shadow:0 16px 50px rgba(36,25,70,.14);overflow:hidden}.ad-campaign.is-visible{display:block}.ad-link{display:flex;align-items:center;gap:1.2rem;padding:1rem;color:var(--color-text);text-decoration:none}.ad-link:hover{color:var(--color-text)}picture{flex:0 0 min(34%,240px)}img{display:block;width:100%;max-height:145px;object-fit:cover;border-radius:10px}.ad-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:.3rem}.ad-copy small{font:500 .58rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted)}.ad-copy strong{font:600 1.05rem var(--font-serif)}.ad-copy span{font-size:.78rem;line-height:1.5;color:var(--color-muted)}.ad-copy b{font-size:.7rem;color:var(--color-accent)}.ad-close{position:absolute;z-index:2;top:.45rem;right:.55rem;width:28px;height:28px;border:0;border-radius:50%;background:rgba(17,15,23,.75);color:#fff;font-size:1rem;cursor:pointer}.ad-inline{max-width:760px;margin:2.5rem 0}.ad-sticky{position:fixed;z-index:40;left:50%;bottom:1rem;width:min(760px,calc(100% - 2rem));transform:translateX(-50%)}.ad-sticky .ad-link{padding:.75rem 2.7rem .75rem .85rem}.ad-sticky picture{flex-basis:110px}.ad-sticky img{height:66px}.ad-popup{position:fixed;z-index:50;right:1.25rem;bottom:1.25rem;width:min(390px,calc(100% - 2rem))}.ad-popup .ad-link{display:block;padding:1rem}.ad-popup picture{display:block;margin-bottom:.8rem}.ad-popup img{max-height:180px}.ad-popup .ad-copy{padding-right:1.3rem}@media(max-width:640px){.ad-link{gap:.75rem;padding:.8rem}.ad-copy span{display:none}.ad-inline picture{flex-basis:38%}.ad-sticky{bottom:.6rem}.ad-sticky picture{display:none}.ad-popup{right:1rem;bottom:1rem}}
+</style>

@@ -13,15 +13,45 @@ const { data: sponsoredPosts } = await supabase
   .select('id, title, slug, sponsor_name, sponsor_url, published, created_at')
   .eq('is_sponsored', true)
   .order('created_at', { ascending: false });
+
+const { data: campaigns } = await supabase
+  .from('ad_campaigns')
+  .select('*')
+  .order('created_at', { ascending: false });
+const ok = Astro.url.searchParams.get('ok');
+const error = Astro.url.searchParams.get('erro');
 ---
 
 <AdminLayout title="Patrocínios">
   <div class="actions">
+    <a href="/admin/patrocinios/nova" class="btn btn-primary">Nova campanha</a>
     <a href="/admin/patrocinios/interesses" class="btn btn-secondary">Ver interesses recebidos →</a>
     <a href="/patrocinar" target="_blank" class="btn btn-secondary">Ver página pública ↗</a>
   </div>
 
-  <h2 style="font-family: Georgia, serif; font-size: 1rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.07em; font-size: 0.75rem; margin-bottom: 0.75rem;">Posts patrocinados</h2>
+  {ok && <div class="alert alert-success">Campanha atualizada.</div>}
+  {error && <div class="alert alert-error">Não foi possível atualizar a campanha.</div>}
+
+  <h2 class="section-title">Campanhas de anúncios</h2>
+  <div class="campaign-grid">
+    {campaigns && campaigns.length > 0 ? campaigns.map((campaign) => (
+      <article class="campaign-card">
+        <div class="campaign-top"><span class="badge">{campaign.placement === 'inline' ? 'Banner' : campaign.placement === 'sticky' ? 'Faixa fixa' : 'Pop-up'}</span><span class={`badge ${campaign.approved && campaign.active ? 'badge-green' : campaign.approved ? 'badge-gray' : 'badge-red'}`}>{campaign.approved ? campaign.active ? 'Ativa' : 'Pausada' : 'Pendente'}</span></div>
+        {campaign.image_url && <img src={campaign.image_url} alt="" loading="lazy" />}
+        <h3>{campaign.title}</h3><p>{campaign.sponsor_name} · {campaign.contact_email}</p>
+        <p class="campaign-meta">{campaign.article_slug ? `Artigo: ${campaign.article_slug}` : 'Todos os artigos'} · {campaign.impressions ?? 0} impressões · {campaign.clicks ?? 0} cliques</p>
+        <div class="campaign-actions">
+          <a href={`/admin/patrocinios/nova?id=${campaign.id}`} class="btn btn-secondary btn-sm">Editar</a>
+          <form method="POST" action="/api/admin/patrocinios/campanha"><input type="hidden" name="id" value={campaign.id} />
+            {!campaign.approved ? <button class="btn btn-primary btn-sm" name="action" value="approve">Aprovar</button> : campaign.active ? <button class="btn btn-secondary btn-sm" name="action" value="pause">Pausar</button> : <button class="btn btn-primary btn-sm" name="action" value="activate">Ativar</button>}
+            {campaign.approved && <button class="btn btn-secondary btn-sm" name="action" value="reject">Revogar</button>}
+          </form>
+        </div>
+      </article>
+    )) : <p class="empty-campaigns">Nenhuma campanha enviada ainda.</p>}
+  </div>
+
+  <h2 class="section-title">Posts patrocinados</h2>
 
   <div class="card" style="padding: 0; overflow: hidden;">
     {sponsoredPosts && sponsoredPosts.length > 0 ? (
@@ -68,3 +98,5 @@ const { data: sponsoredPosts } = await supabase
     )}
   </div>
 </AdminLayout>
+
+<style>.actions{display:flex;flex-wrap:wrap;gap:.7rem;margin-bottom:1.5rem}.section-title{font:600 .72rem var(--font-mono);color:var(--color-muted);text-transform:uppercase;letter-spacing:.08em;margin:1.8rem 0 .8rem}.campaign-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}.campaign-card{padding:1.15rem;border:1px solid var(--color-border);border-radius:14px;background:#fff}.campaign-top{display:flex;justify-content:space-between;margin-bottom:.8rem}.campaign-card img{width:100%;height:120px;object-fit:cover;border-radius:9px;margin-bottom:.9rem}.campaign-card h3{font-size:1rem;margin-bottom:.25rem}.campaign-card>p{font-size:.76rem;color:var(--color-muted)}.campaign-meta{margin-top:.65rem;padding-top:.65rem;border-top:1px solid var(--color-border);font-family:var(--font-mono)!important;font-size:.6rem!important}.campaign-actions,.campaign-actions form{display:flex;flex-wrap:wrap;gap:.45rem}.campaign-actions{margin-top:1rem}.empty-campaigns{padding:1.5rem;border:1px dashed var(--color-border);border-radius:12px;color:var(--color-muted)}</style>

@@ -1,0 +1,18 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+const supabase = createClient(Astro.cookies, Astro.request);
+const { data: leads } = await supabase.from('marketing_leads').select('*').order('created_at', { ascending: false });
+const activeCount = leads?.filter((lead) => !lead.unsubscribed_at).length ?? 0;
+---
+<AdminLayout title="Leads de marketing">
+  <div class="lead-summary"><div><strong>{activeCount}</strong><span>contatos ativos</span></div><a class="btn btn-secondary" href="/api/admin/leads/exportar">Exportar CSV</a></div>
+  <p class="notice">Envie comunicações somente aos contatos ativos e inclua uma forma clara de cancelamento em cada mensagem.</p>
+  <div class="card table-wrap">
+    {leads && leads.length ? <table class="data-table"><thead><tr><th>Nome</th><th>Contato</th><th>WhatsApp</th><th>Consentimento</th><th>Status</th><th></th></tr></thead><tbody>{leads.map((lead) => <tr><td><strong>{lead.name}</strong></td><td><a href={`mailto:${lead.email}`}>{lead.email}</a></td><td><a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener">{lead.whatsapp}</a></td><td>{new Date(lead.consented_at).toLocaleString('pt-BR')}</td><td><span class={`badge ${lead.unsubscribed_at ? 'badge-gray' : 'badge-green'}`}>{lead.unsubscribed_at ? 'Cancelado' : 'Ativo'}</span></td><td><form method="POST" action="/api/admin/leads/status"><input type="hidden" name="id" value={lead.id} /><button class="btn btn-secondary btn-sm" name="action" value={lead.unsubscribed_at ? 'reactivate' : 'unsubscribe'}>{lead.unsubscribed_at ? 'Reativar' : 'Cancelar'}</button></form></td></tr>)}</tbody></table> : <p class="empty">Nenhum contato captado ainda.</p>}
+  </div>
+</AdminLayout>
+<style>.lead-summary{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.4rem;margin-bottom:1rem;border:1px solid var(--color-border);border-radius:14px;background:#fff}.lead-summary div{display:flex;align-items:baseline;gap:.6rem}.lead-summary strong{font:600 2rem var(--font-serif);color:var(--color-accent)}.lead-summary span,.notice{font-size:.75rem;color:var(--color-muted)}.notice{margin-bottom:1rem}.table-wrap{padding:0;overflow-x:auto}.empty{padding:2rem;color:var(--color-muted)}</style>

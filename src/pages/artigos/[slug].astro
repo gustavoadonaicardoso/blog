@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import SponsorBanner from '../../components/SponsorBanner.astro';
+import AdCampaign from '../../components/AdCampaign.astro';
 import { createClient } from '../../lib/supabase';
 import { marked } from 'marked';
 
@@ -20,6 +21,15 @@ if (!post) {
 }
 
 const contentHtml = post.content ? marked.parse(post.content) : '';
+
+const { data: availableCampaigns } = await supabase
+  .from('ad_campaigns')
+  .select('id, sponsor_name, title, description, image_url, mobile_image_url, destination_url, placement, article_slug')
+  .order('created_at', { ascending: false });
+const campaigns = (availableCampaigns ?? []).filter((campaign) => !campaign.article_slug || campaign.article_slug === slug);
+const inlineAd = campaigns.find((campaign) => campaign.placement === 'inline');
+const stickyAd = campaigns.find((campaign) => campaign.placement === 'sticky');
+const popupAd = campaigns.find((campaign) => campaign.placement === 'popup');
 
 const date = new Date(post.created_at).toLocaleDateString('pt-BR', {
   day: '2-digit',
@@ -49,6 +59,8 @@ const date = new Date(post.created_at).toLocaleDateString('pt-BR', {
 
     <div class="post-content" set:html={contentHtml} />
 
+    {inlineAd && <AdCampaign campaign={inlineAd} />}
+
     {post.is_sponsored && post.sponsor_name && (
       <SponsorBanner
         sponsor_name={post.sponsor_name}
@@ -61,6 +73,8 @@ const date = new Date(post.created_at).toLocaleDateString('pt-BR', {
   <nav class="post-nav">
     <a href="/artigos" class="back-link">← Voltar para artigos</a>
   </nav>
+  {stickyAd && <AdCampaign campaign={stickyAd} />}
+  {popupAd && <AdCampaign campaign={popupAd} />}
 </Layout>
 
 <style>

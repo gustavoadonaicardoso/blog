@@ -1,0 +1,34 @@
+<section class="cookie-consent" id="cookieConsent" hidden aria-label="Preferências de cookies">
+  <div class="cookie-summary">
+    <div><strong>Cookies e privacidade</strong><p>Usamos armazenamento essencial para suas preferências. Cookies de análise e marketing só serão usados com sua autorização.</p></div>
+    <div class="cookie-actions"><button data-cookie-action="reject">Recusar opcionais</button><button data-cookie-action="settings">Personalizar</button><button class="primary" data-cookie-action="accept">Aceitar todos</button></div>
+  </div>
+  <form class="cookie-settings" hidden>
+    <label><span><strong>Essenciais</strong><small>Preferências de privacidade e funcionamento do site.</small></span><input type="checkbox" checked disabled /></label>
+    <label><span><strong>Análise</strong><small>Medição de audiência e desempenho.</small></span><input type="checkbox" name="analytics" /></label>
+    <label><span><strong>Marketing</strong><small>Campanhas e conteúdo personalizado.</small></span><input type="checkbox" name="marketing" /></label>
+    <button class="primary" data-cookie-action="save" type="submit">Salvar preferências</button>
+  </form>
+</section>
+<button class="cookie-reopen" id="cookieReopen" type="button">Cookies</button>
+
+<script>
+  const banner = document.getElementById('cookieConsent') as HTMLElement;
+  const settings = banner.querySelector('.cookie-settings') as HTMLFormElement;
+  const storageKey = 'vortice_cookie_consent';
+  const save = (analytics: boolean, marketing: boolean) => {
+    const consent = { essential: true, analytics, marketing, updatedAt: new Date().toISOString() };
+    localStorage.setItem(storageKey, JSON.stringify(consent)); banner.hidden = true; settings.hidden = true;
+    window.dispatchEvent(new CustomEvent('cookie-consent-updated', { detail: consent }));
+  };
+  if (!localStorage.getItem(storageKey)) banner.hidden = false;
+  banner.querySelector('[data-cookie-action="accept"]')?.addEventListener('click', () => save(true, true));
+  banner.querySelector('[data-cookie-action="reject"]')?.addEventListener('click', () => save(false, false));
+  banner.querySelector('[data-cookie-action="settings"]')?.addEventListener('click', () => { settings.hidden = false; });
+  settings.addEventListener('submit', (event) => { event.preventDefault(); const data = new FormData(settings); save(data.get('analytics') === 'on', data.get('marketing') === 'on'); });
+  document.getElementById('cookieReopen')?.addEventListener('click', () => { banner.hidden = false; settings.hidden = false; });
+</script>
+
+<style>
+  .cookie-consent[hidden]{display:none}.cookie-consent{position:fixed;z-index:100;left:1rem;right:1rem;bottom:1rem;max-width:1100px;margin:auto;padding:1rem 1.15rem;border:1px solid rgba(108,77,230,.22);border-radius:16px;background:#fff;box-shadow:0 20px 65px rgba(20,12,45,.24)}.cookie-summary{display:flex;align-items:center;justify-content:space-between;gap:1.5rem}.cookie-summary strong{font-size:.86rem}.cookie-summary p{max-width:620px;margin-top:.25rem;color:var(--color-muted);font-size:.68rem;line-height:1.45}.cookie-actions{display:flex;flex-wrap:wrap;gap:.45rem}.cookie-consent button{padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:999px;background:#fff;font-size:.65rem;font-weight:700;cursor:pointer}.cookie-consent button.primary{border-color:var(--color-accent);background:var(--color-accent);color:#fff}.cookie-settings{margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--color-border)}.cookie-settings label{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.55rem 0}.cookie-settings label span{display:flex;flex-direction:column}.cookie-settings small{color:var(--color-muted);font-size:.62rem}.cookie-settings input{accent-color:var(--color-accent)}.cookie-reopen{position:fixed;z-index:39;left:.6rem;bottom:.55rem;padding:.35rem .55rem;border:1px solid var(--color-border);border-radius:999px;background:#fff;color:var(--color-muted);font-size:.55rem;cursor:pointer}@media(max-width:720px){.cookie-summary{align-items:flex-start;flex-direction:column}.cookie-actions{width:100%}.cookie-actions button{flex:1}.cookie-consent{left:.6rem;right:.6rem;bottom:.6rem}}
+</style>
