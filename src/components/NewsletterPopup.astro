@@ -27,7 +27,7 @@
   };
   const dismissedAt = Number(localStorage.getItem('vortice_newsletter_dismissed') ?? 0);
   const canShow = !localStorage.getItem('vortice_newsletter_subscribed') && Date.now() - dismissedAt > 7 * 86400000;
-  if (popup && canShow) setTimeout(() => { popup.hidden = false; document.body.style.overflow = 'hidden'; popup.querySelector<HTMLInputElement>('input')?.focus(); }, 12000);
+  if (popup && canShow) setTimeout(() => { popup.hidden = false; document.body.style.overflow = 'hidden'; popup.querySelector<HTMLInputElement>('input')?.focus(); }, 5000);
   popup?.querySelector('.newsletter-close')?.addEventListener('click', close);
   popup?.addEventListener('click', (event) => { if (event.target === popup) close(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && popup && !popup.hidden) close(); });
