@@ -7,6 +7,12 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
   site: process.env.SITE_URL || 'https://vortice.exemplo.com',
   output: 'server',
+  security: {
+    allowedDomains: [
+      { protocol: 'https', hostname: 'blog.vorticetecnologia.com.br' },
+      { protocol: 'https', hostname: 'blog-vtec.vercel.app' },
+    ],
+  },
   adapter: vercel(),
   integrations: [sitemap()],
 });
