@@ -21,7 +21,7 @@ export const POST: APIRoute = async ({ request }) => {
   const image_url = optional(form, 'image_url');
   const mobile_image_url = optional(form, 'mobile_image_url');
   const placement = optional(form, 'placement');
-  if (!sponsor_name || !contact_email || !title || !destination_url || !['inline', 'sticky', 'popup'].includes(placement ?? '') || ![destination_url, image_url, mobile_image_url].every(validHttpUrl)) {
+  if (!sponsor_name || !contact_email || !title || !destination_url || !['inline', 'top', 'bottom', 'sidebar', 'sticky', 'popup'].includes(placement ?? '') || ![destination_url, image_url, mobile_image_url].every(validHttpUrl)) {
     headers.set('Location', `/admin/patrocinios/nova?erro=campos${id ? `&id=${id}` : ''}`);
     return new Response(null, { status: 303, headers });
   }

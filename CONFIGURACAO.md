@@ -26,7 +26,8 @@ Para ativar a captação de newsletter em um projeto existente, execute também
 - Empresas enviam propostas em `/patrocinar`; elas entram como pendentes.
 - O administrador revisa em `/admin/patrocinios` e pode aprovar, pausar ou revogar.
 - O botão **Nova campanha** permite cadastrar e agendar campanhas diretamente.
-- Formatos disponíveis: banner no artigo, faixa fixa inferior e pop-up após 5 segundos.
+- Formatos disponíveis: topo do artigo, final do artigo, coluna lateral direita,
+  faixa fixa inferior e pop-up após 5 segundos.
 - Imagens são informadas por URL. Use sempre arquivos HTTPS hospedados em origem confiável.
 
 ## Newsletter, prospecção e cookies

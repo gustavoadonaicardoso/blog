@@ -3,12 +3,18 @@ create table if not exists ad_campaigns (
   id uuid primary key default gen_random_uuid(), sponsor_name text not null,
   contact_email text not null, title text not null, description text,
   image_url text, mobile_image_url text, destination_url text not null,
-  placement text not null default 'inline' check (placement in ('inline', 'sticky', 'popup')),
+  placement text not null default 'top' check (placement in ('inline', 'top', 'bottom', 'sidebar', 'sticky', 'popup')),
   article_slug text, starts_at timestamptz, ends_at timestamptz,
   approved boolean default false, active boolean default false,
   impressions bigint default 0, clicks bigint default 0,
   created_at timestamptz default now(), updated_at timestamptz default now()
 );
+
+-- Amplia as posições em bancos que já possuíam a versão inicial da tabela.
+alter table ad_campaigns drop constraint if exists ad_campaigns_placement_check;
+alter table ad_campaigns alter column placement set default 'top';
+alter table ad_campaigns add constraint ad_campaigns_placement_check
+  check (placement in ('inline', 'top', 'bottom', 'sidebar', 'sticky', 'popup'));
 
 alter table ad_campaigns enable row level security;
 drop policy if exists "public read active campaigns" on ad_campaigns;

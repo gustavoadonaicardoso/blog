@@ -16,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
   const image_url = (form.get('image_url') as string) || null;
   const mobile_image_url = (form.get('mobile_image_url') as string) || null;
   const destination_url = (form.get('destination_url') as string) || null;
-  const placement = (form.get('placement') as string) || 'inline';
+  const placement = (form.get('placement') as string) || 'top';
   const article_slug = (form.get('article_slug') as string) || null;
 
   if (!company_name || !email) {
@@ -35,7 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   if (ad_title || destination_url || image_url) {
-    if (!ad_title || !destination_url || !['inline', 'sticky', 'popup'].includes(placement)) {
+    if (!ad_title || !destination_url || !['inline', 'top', 'bottom', 'sidebar', 'sticky', 'popup'].includes(placement)) {
       responseHeaders.set('Location', '/patrocinar?erro=anuncio');
       return new Response(null, { status: 302, headers: responseHeaders });
     }

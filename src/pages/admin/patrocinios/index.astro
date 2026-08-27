@@ -36,7 +36,7 @@ const error = Astro.url.searchParams.get('erro');
   <div class="campaign-grid">
     {campaigns && campaigns.length > 0 ? campaigns.map((campaign) => (
       <article class="campaign-card">
-        <div class="campaign-top"><span class="badge">{campaign.placement === 'inline' ? 'Banner' : campaign.placement === 'sticky' ? 'Faixa fixa' : 'Pop-up'}</span><span class={`badge ${campaign.approved && campaign.active ? 'badge-green' : campaign.approved ? 'badge-gray' : 'badge-red'}`}>{campaign.approved ? campaign.active ? 'Ativa' : 'Pausada' : 'Pendente'}</span></div>
+        <div class="campaign-top"><span class="badge">{{ inline: 'Final', top: 'Topo', bottom: 'Final', sidebar: 'Lateral', sticky: 'Faixa fixa', popup: 'Pop-up' }[campaign.placement] ?? campaign.placement}</span><span class={`badge ${campaign.approved && campaign.active ? 'badge-green' : campaign.approved ? 'badge-gray' : 'badge-red'}`}>{campaign.approved ? campaign.active ? 'Ativa' : 'Pausada' : 'Pendente'}</span></div>
         {campaign.image_url && <img src={campaign.image_url} alt="" loading="lazy" />}
         <h3>{campaign.title}</h3><p>{campaign.sponsor_name} · {campaign.contact_email}</p>
         <p class="campaign-meta">{campaign.article_slug ? `Artigo: ${campaign.article_slug}` : 'Todos os artigos'} · {campaign.impressions ?? 0} impressões · {campaign.clicks ?? 0} cliques</p>

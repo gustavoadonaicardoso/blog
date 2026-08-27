@@ -81,7 +81,7 @@ const error = Astro.url.searchParams.get('erro');
         <div class="form-group"><label for="image_url">URL da imagem (desktop)</label><input type="url" id="image_url" name="image_url" placeholder="https://empresa.com/banner.jpg" /></div>
         <div class="form-group"><label for="mobile_image_url">URL da imagem para celular</label><input type="url" id="mobile_image_url" name="mobile_image_url" placeholder="https://empresa.com/banner-mobile.jpg" /></div>
         <div class="form-group"><label for="destination_url">Link de destino</label><input type="url" id="destination_url" name="destination_url" placeholder="https://empresa.com/oferta" /></div>
-        <div class="form-group"><label for="placement">Formato desejado</label><select id="placement" name="placement"><option value="inline">Banner dentro do artigo</option><option value="sticky">Faixa fixa inferior</option><option value="popup">Pop-up após 5 segundos</option></select></div>
+        <div class="form-group"><label for="placement">Formato desejado</label><select id="placement" name="placement"><option value="top">Topo do artigo</option><option value="bottom">Final do artigo</option><option value="sidebar">Coluna lateral direita</option><option value="sticky">Faixa fixa inferior</option><option value="popup">Pop-up após 5 segundos</option></select></div>
         <div class="form-group"><label for="article_slug">Slug do artigo específico</label><input type="text" id="article_slug" name="article_slug" placeholder="Deixe vazio para aparecer em qualquer artigo" /></div>
       </fieldset>
 

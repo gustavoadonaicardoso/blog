@@ -50,7 +50,7 @@ create table ad_campaigns (
   image_url text,
   mobile_image_url text,
   destination_url text not null,
-  placement text not null default 'inline' check (placement in ('inline', 'sticky', 'popup')),
+  placement text not null default 'top' check (placement in ('inline', 'top', 'bottom', 'sidebar', 'sticky', 'popup')),
   article_slug text,
   starts_at timestamptz,
   ends_at timestamptz,
