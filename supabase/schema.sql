@@ -6,7 +6,7 @@
 -- posts
 create table posts (
   id uuid primary key default gen_random_uuid(),
-  title text not null,
+  title text,
   slug text not null unique,
   excerpt text,
   content text,

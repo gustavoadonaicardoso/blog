@@ -17,7 +17,7 @@ const messages: Record<string, string> = { campos: 'Revise os campos e o link de
     <section class="card create-card">
       <h2>Novo banner</h2><p class="intro">Crie uma chamada clicável para o topo da página inicial.</p>
       <form method="POST" action="/api/admin/banners/salvar" enctype="multipart/form-data">
-        <div class="form-group"><label for="title">Título *</label><input id="title" name="title" type="text" minlength="2" maxlength="120" required /></div>
+        <div class="form-group"><label for="title">Título</label><input id="title" name="title" type="text" maxlength="120" placeholder="Opcional, caso o texto já esteja na imagem" /><small>Deixe vazio para exibir somente a arte.</small></div>
         <div class="form-group"><label for="destination_url">Link de destino *</label><input id="destination_url" name="destination_url" type="text" placeholder="https://... ou /artigos/..." required /></div>
         <div class="form-group"><label for="image">Imagem desktop *</label><input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required /><small>Recomendado: 1200 × 400 px.</small></div>
         <div class="form-group"><label for="mobile_image">Imagem mobile</label><input id="mobile_image" name="mobile_image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" /><small>Opcional. Recomendado: 800 × 1000 px.</small></div>
@@ -30,8 +30,9 @@ const messages: Record<string, string> = { campos: 'Revise os campos e o link de
       {banners?.length ? banners.map((banner) => (
         <article class="card banner-item">
           <img src={banner.image_url} alt="" width="360" height="120" />
-          <div class="banner-info"><div><span class:list={['badge', banner.active ? 'badge-green' : 'badge-gray']}>{banner.active ? 'Ativo' : 'Inativo'}</span><span class="duration">{banner.display_seconds}s</span></div><h3>{banner.title}</h3><a href={banner.destination_url} target="_blank" rel="noopener">{banner.destination_url} ↗</a></div>
+          <div class="banner-info"><div><span class:list={['badge', banner.active ? 'badge-green' : 'badge-gray']}>{banner.active ? 'Ativo' : 'Inativo'}</span><span class="duration">{banner.display_seconds}s</span></div><h3>{banner.title || 'Banner sem título'}</h3><a href={banner.destination_url} target="_blank" rel="noopener">{banner.destination_url} ↗</a></div>
           <div class="banner-actions">
+            <a class="btn btn-secondary btn-sm" href={`/admin/banners/${banner.id}`}>Editar</a>
             <form method="POST" action="/api/admin/banners/acao"><input type="hidden" name="id" value={banner.id} /><button class="btn btn-secondary btn-sm" name="action" value={banner.active ? 'deactivate' : 'activate'}>{banner.active ? 'Desativar' : 'Ativar'}</button></form>
             <form method="POST" action="/api/admin/banners/acao" onsubmit="return confirm('Excluir este banner permanentemente?')"><input type="hidden" name="id" value={banner.id} /><button class="btn btn-danger btn-sm" name="action" value="delete">Excluir</button></form>
           </div>

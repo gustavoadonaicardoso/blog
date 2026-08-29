@@ -1,7 +1,7 @@
 -- Execute uma vez no SQL Editor para habilitar os banners rotativos da página inicial.
 create table if not exists home_banners (
   id uuid primary key default gen_random_uuid(),
-  title text not null check (char_length(title) between 2 and 120),
+  title text check (title is null or char_length(title) between 2 and 120),
   image_url text not null,
   mobile_image_url text,
   image_alt text not null check (char_length(image_alt) between 2 and 180),
@@ -27,3 +27,8 @@ create policy "admin upload home banners" on storage.objects
   for insert to authenticated with check (bucket_id = 'home-banners');
 create policy "admin delete home banners" on storage.objects
   for delete to authenticated using (bucket_id = 'home-banners');
+
+-- Compatibilidade para instalações que criaram a primeira versão da tabela.
+alter table home_banners alter column title drop not null;
+alter table home_banners drop constraint if exists home_banners_title_check;
+alter table home_banners add constraint home_banners_title_check check (title is null or char_length(title) between 2 and 120);

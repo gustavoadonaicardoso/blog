@@ -1,0 +1,35 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+const supabase = createClient(Astro.cookies, Astro.request);
+const { data: banner } = await supabase.from('home_banners').select('*').eq('id', Astro.params.id).single();
+if (!banner) return Astro.redirect('/admin/banners', 302);
+const error = Astro.url.searchParams.get('erro');
+const messages: Record<string, string> = { campos: 'Revise os campos e o link de destino.', formato: 'Use uma imagem JPEG, PNG, WebP ou AVIF.', tamanho: 'Cada imagem deve ter no máximo 8 MB.', upload: 'Falha no upload. Verifique a configuração do Storage.', db: 'Não foi possível atualizar o banner.' };
+---
+
+<AdminLayout title="Editar Banner">
+  {Astro.url.searchParams.get('ok') && <div class="alert alert-success">Banner atualizado com sucesso.</div>}
+  {error && <div class="alert alert-error">{messages[error] ?? 'Não foi possível concluir.'}</div>}
+  <form class="card edit-form" method="POST" action="/api/admin/banners/atualizar" enctype="multipart/form-data">
+    <input type="hidden" name="id" value={banner.id} />
+    <div class="current-image"><img src={banner.image_url} alt={banner.image_alt} width="1200" height="400" /></div>
+    <div class="form-grid">
+      <div class="form-group form-full"><label for="title">Título</label><input id="title" name="title" type="text" maxlength="120" value={banner.title ?? ''} placeholder="Opcional, caso o texto já esteja na imagem" /><small>Deixe vazio para exibir somente a arte.</small></div>
+      <div class="form-group form-full"><label for="destination_url">Link de destino *</label><input id="destination_url" name="destination_url" type="text" value={banner.destination_url} required /></div>
+      <div class="form-group"><label for="image">Substituir imagem desktop</label><input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" /><small>Atual: imagem exibida acima.</small></div>
+      <div class="form-group"><label for="mobile_image">Substituir imagem mobile</label><input id="mobile_image" name="mobile_image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" />{banner.mobile_image_url ? <label class="remove"><input type="checkbox" name="remove_mobile" value="true" /> Remover versão mobile</label> : <small>Nenhuma versão mobile cadastrada.</small>}</div>
+      <div class="form-group form-full"><label for="image_alt">Descrição da imagem *</label><input id="image_alt" name="image_alt" type="text" minlength="2" maxlength="180" value={banner.image_alt} required /></div>
+      <div class="form-group"><label for="display_seconds">Tempo na tela</label><select id="display_seconds" name="display_seconds">{[5,7,10,15].map((seconds) => <option value={seconds} selected={banner.display_seconds === seconds}>{seconds} segundos</option>)}</select></div>
+      <div class="checkbox-group"><input id="active" name="active" type="checkbox" value="true" checked={banner.active} /><label for="active">Banner ativo</label></div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" type="submit">Salvar alterações</button><a class="btn btn-secondary" href="/admin/banners">Voltar</a><a class="btn btn-secondary" href={banner.destination_url} target="_blank" rel="noopener">Abrir destino ↗</a></div>
+  </form>
+</AdminLayout>
+
+<style>
+  .edit-form{max-width:900px}.current-image{margin-bottom:1.75rem;overflow:hidden;border-radius:12px;background:var(--color-border)}.current-image img{display:block;width:100%;aspect-ratio:3/1;object-fit:cover}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem}.form-full{grid-column:1/-1}.form-group small{display:block;margin-top:.4rem;color:var(--color-muted);font-size:.68rem}.remove{display:flex;align-items:center;gap:.45rem;margin-top:.65rem;color:#991b1b;font-size:.7rem}.remove input{accent-color:#dc2626}.actions{margin:0}@media(max-width:650px){.form-grid{grid-template-columns:1fr}.form-full{grid-column:auto}.current-image img{aspect-ratio:16/9}}
+</style>
