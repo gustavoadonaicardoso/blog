@@ -1,0 +1,67 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+
+const supabase = createClient(Astro.cookies, Astro.request);
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const id = String(form.get('id') ?? '');
+  const action = String(form.get('action') ?? '');
+
+  if (id && action === 'approve') await supabase.from('comments').update({ approved: true }).eq('id', id);
+  if (id && action === 'hide') await supabase.from('comments').update({ approved: false }).eq('id', id);
+  if (id && action === 'delete') await supabase.from('comments').delete().eq('id', id);
+  return Astro.redirect('/admin/comentarios', 303);
+}
+
+const { data: comments } = await supabase
+  .from('comments')
+  .select('id, name, email, content, approved, created_at, posts(title, slug)')
+  .order('approved', { ascending: true })
+  .order('created_at', { ascending: false });
+
+const pending = comments?.filter((comment) => !comment.approved).length ?? 0;
+---
+
+<AdminLayout title="Comentários">
+  <div class="summary">
+    <span><strong>{pending}</strong> aguardando moderação</span>
+    <p>O e-mail do leitor é privado e nunca aparece no site.</p>
+  </div>
+
+  <div class="card comments-card">
+    {comments && comments.length > 0 ? (
+      <div class="comments-list">
+        {comments.map((comment) => {
+          const post = Array.isArray(comment.posts) ? comment.posts[0] : comment.posts;
+          return (
+            <article class:list={['comment-row', { pending: !comment.approved }]}>
+              <div class="comment-meta">
+                <span class:list={['badge', comment.approved ? 'badge-green' : '']}>{comment.approved ? 'Publicado' : 'Pendente'}</span>
+                <time datetime={comment.created_at}>{new Date(comment.created_at).toLocaleString('pt-BR')}</time>
+              </div>
+              <div class="comment-body">
+                <div><strong>{comment.name}</strong><a href={`mailto:${comment.email}`}>{comment.email}</a></div>
+                <p>{comment.content}</p>
+                {post && <a class="post-link" href={`/artigos/${post.slug}`} target="_blank">{post.title} ↗</a>}
+              </div>
+              <div class="comment-actions">
+                <form method="POST"><input type="hidden" name="id" value={comment.id} /><input type="hidden" name="action" value={comment.approved ? 'hide' : 'approve'} /><button class={comment.approved ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm'} type="submit">{comment.approved ? 'Ocultar' : 'Aprovar'}</button></form>
+                <form method="POST" onsubmit="return confirm('Excluir este comentário permanentemente?')"><input type="hidden" name="id" value={comment.id} /><input type="hidden" name="action" value="delete" /><button class="btn btn-danger btn-sm" type="submit">Excluir</button></form>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    ) : <p class="empty">Nenhum comentário recebido ainda.</p>}
+  </div>
+</AdminLayout>
+
+<style>
+  .summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;padding:1rem 1.25rem;border:1px solid var(--color-border);border-radius:12px;background:#fff}.summary span{font-size:.82rem}.summary strong{color:var(--color-accent);font-size:1.25rem}.summary p{color:var(--color-muted);font-size:.72rem}.comments-card{padding:0;overflow:hidden}.comment-row{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:1.25rem;padding:1.4rem 1.5rem;border-bottom:1px solid var(--color-border)}.comment-row:last-child{border-bottom:0}.comment-row.pending{background:#faf9ff}.comment-meta{display:flex;align-items:flex-start;flex-direction:column;gap:.55rem}.comment-meta time{color:var(--color-muted);font-size:.65rem}.comment-body strong,.comment-body>a{display:block}.comment-body strong{font-size:.86rem}.comment-body>div>a{color:var(--color-muted);font-size:.72rem}.comment-body p{max-width:760px;margin:.65rem 0;white-space:pre-wrap;font-size:.85rem;line-height:1.6}.post-link{font-size:.7rem}.comment-actions{display:flex;align-items:center;gap:.45rem}.empty{padding:2rem;color:var(--color-muted)}@media(max-width:800px){.comment-row{grid-template-columns:1fr}.comment-meta{align-items:center;flex-direction:row}.comment-actions{justify-content:flex-start}}@media(max-width:540px){.summary{align-items:flex-start;flex-direction:column}.comment-actions{flex-wrap:wrap}}
+</style>

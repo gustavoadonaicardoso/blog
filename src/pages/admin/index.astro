@@ -13,11 +13,13 @@ const [
   { count: sponsoredPosts },
   { count: unreadMessages },
   { count: unreadInterests },
+  { count: pendingComments },
 ] = await Promise.all([
   supabase.from('posts').select('*', { count: 'exact', head: true }),
   supabase.from('posts').select('*', { count: 'exact', head: true }).eq('is_sponsored', true).eq('published', true),
   supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('read', false),
   supabase.from('sponsor_interests').select('*', { count: 'exact', head: true }).eq('read', false),
+  supabase.from('comments').select('*', { count: 'exact', head: true }).eq('approved', false),
 ]);
 ---
 
@@ -48,6 +50,11 @@ const [
       <div class="stat-value">{unreadInterests ?? 0}</div>
       <div class="stat-label">Interesses de patrocínio</div>
     </a>
+    <a href="/admin/comentarios" class="stat-card">
+      <span class="stat-index">05</span>
+      <div class="stat-value">{pendingComments ?? 0}</div>
+      <div class="stat-label">Comentários pendentes</div>
+    </a>
   </div>
 
   <div class="workspace-grid">
@@ -57,6 +64,7 @@ const [
         <a href="/admin/posts/novo"><span class="action-icon">+</span><span><strong>Novo artigo</strong><small>Crie e publique uma nova ideia</small></span><b>↗</b></a>
         <a href="/admin/posts"><span class="action-icon">≡</span><span><strong>Gerenciar conteúdo</strong><small>Edite publicações e rascunhos</small></span><b>↗</b></a>
         <a href="/admin/mensagens"><span class="action-icon">○</span><span><strong>Caixa de entrada</strong><small>Veja as mensagens dos leitores</small></span><b>↗</b></a>
+        <a href="/admin/comentarios"><span class="action-icon">◌</span><span><strong>Moderar comentários</strong><small>Aprove as contribuições dos leitores</small></span><b>↗</b></a>
       </div>
     </section>
   </div>

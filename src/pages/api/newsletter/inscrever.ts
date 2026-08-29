@@ -8,10 +8,10 @@ export const POST: APIRoute = async ({ request }) => {
   const body = await request.json().catch(() => ({}));
   const name = String(body.name ?? '').trim().slice(0, 100);
   const email = String(body.email ?? '').trim().toLowerCase().slice(0, 254);
-  const whatsapp = String(body.whatsapp ?? '').replace(/[^+\d]/g, '').slice(0, 20);
+  const whatsapp = String(body.whatsapp ?? '').replace(/\D/g, '');
   const consent = body.consent === true;
-  if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || whatsapp.length < 10 || !consent) {
-    return Response.json({ error: 'Preencha os dados e aceite a autorização.' }, { status: 400 });
+  if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || !/^[1-9]\d{9,10}$/.test(whatsapp) || !consent) {
+    return Response.json({ error: 'Preencha os dados, informe DDD + número e aceite a autorização.' }, { status: 400 });
   }
   const consentText = 'Autorizo o Vórtice a enviar newsletter, conteúdo e ofertas por e-mail e WhatsApp. Posso cancelar a qualquer momento.';
   const supabase = createClientFromRequest(request, new Headers());

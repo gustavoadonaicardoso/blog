@@ -1,3 +1,16 @@
+---
+import { createClient } from '../lib/supabase';
+
+const supabase = createClient(Astro.cookies, Astro.request);
+const { data: latestPost } = await supabase
+  .from('posts')
+  .select('title, slug')
+  .eq('published', true)
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .maybeSingle();
+---
+
 <div class="newsletter-backdrop" id="newsletterPopup" hidden>
   <section class="newsletter-dialog" role="dialog" aria-modal="true" aria-labelledby="newsletterTitle">
     <button class="newsletter-close" type="button" aria-label="Fechar">×</button>
@@ -7,19 +20,50 @@
     <form id="newsletterForm">
       <label>Nome<input name="name" autocomplete="name" required minlength="2" maxlength="100" /></label>
       <label>E-mail<input type="email" name="email" autocomplete="email" required maxlength="254" /></label>
-      <label>WhatsApp<input type="tel" name="whatsapp" autocomplete="tel" required minlength="10" maxlength="24" placeholder="(11) 99999-9999" /></label>
+      <label>WhatsApp <small>(DDD + número)</small><input type="tel" name="whatsapp" autocomplete="tel-national" inputmode="numeric" required minlength="14" maxlength="15" placeholder="(11) 99999-9999" aria-describedby="whatsappHint" /></label>
+      <small class="field-hint" id="whatsappHint">Digite somente os 10 ou 11 números, incluindo o DDD.</small>
       <label class="consent"><input type="checkbox" name="consent" required /><span>Autorizo o Vórtice a enviar newsletter, conteúdo e ofertas por e-mail e WhatsApp. Posso cancelar a qualquer momento.</span></label>
       <p class="newsletter-status" role="status" aria-live="polite"></p>
       <button class="newsletter-submit" type="submit">Quero receber →</button>
     </form>
     <a class="privacy-link" href="/privacidade">Como tratamos seus dados</a>
+    <div class="newsletter-success" id="newsletterSuccess" hidden role="status" aria-live="polite">
+      <span class="success-icon" aria-hidden="true">✓</span>
+      <span class="newsletter-kicker">Inscrição confirmada</span>
+      <h2>Você está na lista.</h2>
+      <p>Pronto! A partir de agora, as novidades do Vórtice chegam até você.</p>
+      {latestPost ? (
+        <a class="latest-post" href={`/artigos/${latestPost.slug}`}>
+          <small>Artigo mais recente</small>
+          <strong>{latestPost.title}</strong>
+          <span>Ler agora →</span>
+        </a>
+      ) : <a class="latest-post fallback" href="/artigos"><strong>Conheça os artigos do Vórtice</strong><span>Ler agora →</span></a>}
+    </div>
   </section>
 </div>
 
 <script>
   const popup = document.getElementById('newsletterPopup') as HTMLElement | null;
   const form = document.getElementById('newsletterForm') as HTMLFormElement | null;
+  const success = document.getElementById('newsletterSuccess') as HTMLElement | null;
   const status = popup?.querySelector('.newsletter-status') as HTMLElement | null;
+  const whatsapp = form?.elements.namedItem('whatsapp') as HTMLInputElement | null;
+  const whatsappDigits = (value: string) => value.replace(/\D/g, '').slice(0, 11);
+  const formatWhatsapp = (value: string) => {
+    const digits = whatsappDigits(value);
+    if (digits.length <= 2) return digits ? `(${digits}` : '';
+    const ddd = digits.slice(0, 2);
+    const number = digits.slice(2);
+    if (number.length <= 4) return `(${ddd}) ${number}`;
+    const split = number.length > 8 ? 5 : 4;
+    return `(${ddd}) ${number.slice(0, split)}-${number.slice(split)}`;
+  };
+  whatsapp?.addEventListener('input', () => {
+    whatsapp.value = formatWhatsapp(whatsapp.value);
+    const digits = whatsappDigits(whatsapp.value);
+    whatsapp.setCustomValidity(digits.length === 10 || digits.length === 11 ? '' : 'Informe o DDD e o número com 10 ou 11 dígitos.');
+  });
   const close = () => {
     if (!popup) return;
     popup.hidden = true; document.body.style.overflow = '';
@@ -34,14 +78,17 @@
   form?.addEventListener('submit', async (event) => {
     event.preventDefault(); if (!status) return;
     const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-    const data = new FormData(form); button.disabled = true; status.textContent = 'Enviando…';
-    const response = await fetch('/api/newsletter/inscrever', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), email: data.get('email'), whatsapp: data.get('whatsapp'), consent: data.get('consent') === 'on' }) }).catch(() => null);
+    const data = new FormData(form);
+    const phone = whatsappDigits(String(data.get('whatsapp') ?? ''));
+    if (phone.length !== 10 && phone.length !== 11) { whatsapp?.setCustomValidity('Informe o DDD e o número com 10 ou 11 dígitos.'); whatsapp?.reportValidity(); return; }
+    button.disabled = true; status.textContent = 'Enviando…';
+    const response = await fetch('/api/newsletter/inscrever', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), email: data.get('email'), whatsapp: phone, consent: data.get('consent') === 'on' }) }).catch(() => null);
     const result = response ? await response.json().catch(() => ({})) : {};
-    if (response?.ok) { status.textContent = 'Cadastro realizado. Bem-vindo ao Vórtice!'; localStorage.setItem('vortice_newsletter_subscribed', '1'); form.reset(); setTimeout(close, 1800); }
+    if (response?.ok) { localStorage.setItem('vortice_newsletter_subscribed', '1'); form.reset(); form.hidden = true; popup?.querySelector<HTMLElement>('.privacy-link')?.setAttribute('hidden', ''); if (success) success.hidden = false; success?.querySelector<HTMLElement>('a')?.focus(); }
     else { status.textContent = result.error ?? 'Não foi possível cadastrar agora.'; button.disabled = false; }
   });
 </script>
 
 <style>
-  .newsletter-backdrop[hidden]{display:none}.newsletter-backdrop{position:fixed;z-index:80;inset:0;display:grid;place-items:center;padding:1rem;background:rgba(15,12,20,.58);backdrop-filter:blur(7px)}.newsletter-dialog{position:relative;width:min(480px,100%);max-height:calc(100vh - 2rem);overflow:auto;padding:2rem;border:1px solid rgba(108,77,230,.22);border-radius:22px;background:#fff;box-shadow:0 30px 90px rgba(20,12,45,.3)}.newsletter-close{position:absolute;top:.8rem;right:.9rem;width:34px;height:34px;border:0;border-radius:50%;background:#f2eff9;color:#514b5c;font-size:1.25rem;cursor:pointer}.newsletter-kicker{font:500 .6rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent)}.newsletter-dialog h2{margin:.7rem 2rem .6rem 0;font-size:2rem;letter-spacing:-.045em}.newsletter-dialog>p{margin-bottom:1.4rem;color:var(--color-muted);font-size:.86rem}.newsletter-dialog label:not(.consent){display:block;margin-bottom:.8rem;font-size:.7rem;font-weight:700}.newsletter-dialog input:not([type=checkbox]){display:block;width:100%;margin-top:.35rem;padding:.72rem .85rem;border:1px solid var(--color-border);border-radius:9px;font:inherit}.consent{display:flex;align-items:flex-start;gap:.55rem;margin:1rem 0;font-size:.67rem;line-height:1.5;color:var(--color-muted)}.consent input{flex:0 0 auto;margin-top:.18rem;accent-color:var(--color-accent)}.newsletter-submit{width:100%;padding:.8rem;border:0;border-radius:999px;background:linear-gradient(120deg,#6849dc,#8065ec);color:#fff;font-weight:700;cursor:pointer}.newsletter-submit:disabled{opacity:.6}.newsletter-status{min-height:1.2rem;margin:.2rem 0 .6rem!important;font-size:.7rem!important;color:var(--color-accent)!important}.privacy-link{display:block;margin-top:.8rem;text-align:center;font-size:.63rem;color:var(--color-muted)}@media(max-width:520px){.newsletter-dialog{padding:1.4rem}.newsletter-dialog h2{font-size:1.65rem}}
+  .newsletter-backdrop[hidden],[hidden]{display:none!important}.newsletter-backdrop{position:fixed;z-index:80;inset:0;display:grid;place-items:center;padding:1rem;background:rgba(15,12,20,.58);backdrop-filter:blur(7px)}.newsletter-dialog{position:relative;width:min(480px,100%);max-height:calc(100vh - 2rem);overflow:auto;padding:2rem;border:1px solid rgba(108,77,230,.22);border-radius:22px;background:#fff;box-shadow:0 30px 90px rgba(20,12,45,.3)}.newsletter-close{position:absolute;top:.8rem;right:.9rem;width:34px;height:34px;border:0;border-radius:50%;background:#f2eff9;color:#514b5c;font-size:1.25rem;cursor:pointer}.newsletter-kicker{font:500 .6rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent)}.newsletter-dialog h2{margin:.7rem 2rem .6rem 0;font-size:2rem;letter-spacing:-.045em}.newsletter-dialog>p{margin-bottom:1.4rem;color:var(--color-muted);font-size:.86rem}.newsletter-dialog label:not(.consent){display:block;margin-bottom:.8rem;font-size:.7rem;font-weight:700}.newsletter-dialog label small{color:var(--color-muted);font-weight:400}.newsletter-dialog input:not([type=checkbox]){display:block;width:100%;margin-top:.35rem;padding:.72rem .85rem;border:1px solid var(--color-border);border-radius:9px;font:inherit}.field-hint{display:block;margin:-.45rem 0 .8rem;color:var(--color-muted);font-size:.61rem}.consent{display:flex;align-items:flex-start;gap:.55rem;margin:1rem 0;font-size:.67rem;line-height:1.5;color:var(--color-muted)}.consent input{flex:0 0 auto;margin-top:.18rem;accent-color:var(--color-accent)}.newsletter-submit{width:100%;padding:.8rem;border:0;border-radius:999px;background:linear-gradient(120deg,#6849dc,#8065ec);color:#fff;font-weight:700;cursor:pointer}.newsletter-submit:disabled{opacity:.6}.newsletter-status{min-height:1.2rem;margin:.2rem 0 .6rem!important;font-size:.7rem!important;color:var(--color-accent)!important}.privacy-link{display:block;margin-top:.8rem;text-align:center;font-size:.63rem;color:var(--color-muted)}.newsletter-success{text-align:center;padding:.75rem 0 .25rem}.success-icon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 1.25rem;border-radius:50%;background:linear-gradient(135deg,#e9e4ff,#ddf7f4);color:var(--color-accent);font-size:1.7rem;font-weight:700}.newsletter-success h2{margin:.7rem 0}.newsletter-success>p{max-width:350px;margin:0 auto 1.5rem;color:var(--color-muted);font-size:.86rem}.latest-post{display:block;padding:1.2rem;border:1px solid rgba(108,77,230,.18);border-radius:14px;background:var(--color-accent-light);text-align:left;transition:.2s}.latest-post:hover{transform:translateY(-2px);border-color:rgba(108,77,230,.4)}.latest-post small,.latest-post strong,.latest-post span{display:block}.latest-post small{margin-bottom:.4rem;color:var(--color-muted);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em}.latest-post strong{color:var(--color-text);font-size:.9rem;line-height:1.4}.latest-post span{margin-top:.75rem;color:var(--color-accent);font-size:.72rem;font-weight:700}.latest-post.fallback{text-align:center}@media(max-width:520px){.newsletter-dialog{padding:1.4rem}.newsletter-dialog h2{font-size:1.65rem}}
 </style>

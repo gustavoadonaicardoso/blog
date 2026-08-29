@@ -76,6 +76,17 @@ create table marketing_leads (
   created_at timestamptz default now()
 );
 
+-- comments: comentários de leitores, publicados somente após moderação
+create table comments (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references posts(id) on delete cascade,
+  name text not null check (char_length(name) between 2 and 80),
+  email text not null check (char_length(email) <= 254),
+  content text not null check (char_length(content) between 3 and 2000),
+  approved boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
 -- =============================================================
 -- Row Level Security
 -- =============================================================
@@ -132,6 +143,15 @@ create policy "public subscribe" on marketing_leads
 create policy "admin all" on marketing_leads
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
+-- comentários: o público envia e vê apenas os aprovados; o admin modera tudo
+alter table comments enable row level security;
+create policy "public read approved comments" on comments
+  for select using (approved = true);
+create policy "public submit comments" on comments
+  for insert with check (approved = false);
+create policy "admin all" on comments
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
 -- =============================================================
 -- Índices úteis
 -- =============================================================
@@ -142,3 +162,4 @@ create index if not exists idx_sponsor_interests_read on sponsor_interests(read,
 create index if not exists idx_ad_campaigns_delivery on ad_campaigns(approved, active, placement, starts_at, ends_at);
 create unique index if not exists idx_marketing_leads_email on marketing_leads(lower(email));
 create index if not exists idx_marketing_leads_active on marketing_leads(unsubscribed_at, created_at desc);
+create index if not exists idx_comments_post_approved on comments(post_id, approved, created_at desc);
