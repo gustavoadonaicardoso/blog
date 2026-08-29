@@ -13,8 +13,10 @@ create table if not exists home_banners (
 );
 
 alter table home_banners enable row level security;
+drop policy if exists "public read active home banners" on home_banners;
 create policy "public read active home banners" on home_banners
   for select using (active = true);
+drop policy if exists "admin all home banners" on home_banners;
 create policy "admin all home banners" on home_banners
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 create index if not exists idx_home_banners_active on home_banners(active, created_at desc);
@@ -23,8 +25,10 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('home-banners', 'home-banners', true, 8388608, array['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
 on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
+drop policy if exists "admin upload home banners" on storage.objects;
 create policy "admin upload home banners" on storage.objects
   for insert to authenticated with check (bucket_id = 'home-banners');
+drop policy if exists "admin delete home banners" on storage.objects;
 create policy "admin delete home banners" on storage.objects
   for delete to authenticated using (bucket_id = 'home-banners');
 

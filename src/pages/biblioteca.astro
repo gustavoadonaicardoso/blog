@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { books } from '../data/books';
+
+const publishedBooks = books.filter((book) => book.published);
+---
+
+<Layout title="Biblioteca" description="Livros e materiais gratuitos escritos pelo Vórtice.">
+  <header class="library-header">
+    <span class="badge">Biblioteca Vórtice</span>
+    <h1>Conhecimento para levar com você.</h1>
+    <p>Livros e materiais autorais para aprofundar ideias que merecem mais espaço.</p>
+  </header>
+
+  {publishedBooks.length > 0 ? (
+    <section class="book-grid" aria-label="Livros disponíveis">
+      {publishedBooks.map((book) => (
+        <article class="book-card">
+          <div class="book-cover">
+            {book.cover ? <img src={book.cover} alt={`Capa do livro ${book.title}`} loading="lazy" /> : (
+              <div class="cover-placeholder" aria-hidden="true"><span>VÓRTICE</span><strong>{book.title}</strong></div>
+            )}
+          </div>
+          <div class="book-info">
+            <div class="book-meta"><span>PDF gratuito</span>{book.pages && <span>{book.pages} páginas</span>}</div>
+            <h2>{book.title}</h2>
+            <p>{book.description}</p>
+            <button class="btn btn-primary download-trigger" type="button" data-slug={book.slug} data-title={book.title}>
+              Baixar livro
+            </button>
+          </div>
+        </article>
+      ))}
+    </section>
+  ) : (
+    <section class="empty-state">
+      <span aria-hidden="true">◇</span>
+      <h2>Os primeiros livros estão a caminho.</h2>
+      <p>Em breve você encontrará aqui materiais autorais para baixar gratuitamente.</p>
+    </section>
+  )}
+
+  <dialog id="download-dialog" aria-labelledby="dialog-title">
+    <button class="dialog-close" type="button" aria-label="Fechar">×</button>
+    <span class="badge">Download gratuito</span>
+    <h2 id="dialog-title">Baixar livro</h2>
+    <p class="dialog-intro">Preencha seus dados para liberar o PDF.</p>
+    <form id="download-form">
+      <input type="hidden" name="bookSlug" />
+      <div class="honeypot" aria-hidden="true"><label for="website">Site</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+      <div class="form-group"><label for="download-name">Nome</label><input id="download-name" name="name" type="text" required minlength="2" maxlength="100" autocomplete="name" placeholder="Seu nome" /></div>
+      <div class="form-group"><label for="download-phone">Telefone</label><input id="download-phone" name="phone" type="tel" required inputmode="numeric" autocomplete="tel" placeholder="(11) 99999-9999" maxlength="15" /></div>
+      <div class="form-group"><label for="download-email">E-mail</label><input id="download-email" name="email" type="email" required maxlength="254" autocomplete="email" placeholder="seu@email.com" /></div>
+      <p class="privacy-note">Usaremos estes dados para registrar o download. Consulte nossa <a href="/privacidade" target="_blank">Política de Privacidade</a>.</p>
+      <p class="form-message" role="alert" aria-live="polite"></p>
+      <button class="btn btn-primary submit-download" type="submit">Liberar download</button>
+    </form>
+  </dialog>
+</Layout>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('#download-dialog');
+  const form = document.querySelector<HTMLFormElement>('#download-form');
+  const phoneInput = document.querySelector<HTMLInputElement>('#download-phone');
+  const title = document.querySelector<HTMLElement>('#dialog-title');
+  const message = document.querySelector<HTMLElement>('.form-message');
+  const submit = document.querySelector<HTMLButtonElement>('.submit-download');
+
+  document.querySelectorAll<HTMLButtonElement>('.download-trigger').forEach((button) => {
+    button.addEventListener('click', () => {
+      form?.reset();
+      if (form && button.dataset.slug) (form.elements.namedItem('bookSlug') as HTMLInputElement).value = button.dataset.slug;
+      if (title) title.textContent = `Baixar “${button.dataset.title}”`;
+      if (message) { message.textContent = ''; message.className = 'form-message'; }
+      dialog?.showModal();
+      document.querySelector<HTMLInputElement>('#download-name')?.focus();
+    });
+  });
+  document.querySelector<HTMLButtonElement>('.dialog-close')?.addEventListener('click', () => dialog?.close());
+  dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+
+  phoneInput?.addEventListener('input', () => {
+    const digits = phoneInput.value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 2) phoneInput.value = digits ? `(${digits}` : '';
+    else if (digits.length <= 6) phoneInput.value = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    else if (digits.length <= 10) phoneInput.value = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    else phoneInput.value = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity() || !submit || !message) return;
+    submit.disabled = true; submit.textContent = 'Liberando…'; message.textContent = '';
+    const data = Object.fromEntries(new FormData(form));
+    try {
+      const response = await fetch('/api/biblioteca/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      const result = await response.json();
+      if (!response.ok || !result.downloadUrl) throw new Error(result.error || 'Não foi possível liberar o download.');
+      message.className = 'form-message success'; message.textContent = 'Tudo certo! Seu download vai começar.';
+      window.location.assign(result.downloadUrl);
+    } catch (error) {
+      message.className = 'form-message error'; message.textContent = error instanceof Error ? error.message : 'Tente novamente.';
+    } finally { submit.disabled = false; submit.textContent = 'Liberar download'; }
+  });
+</script>
+
+<style>
+  .library-header{max-width:780px;margin-bottom:4rem}.library-header h1{font-size:clamp(3rem,7vw,5.8rem);letter-spacing:-.055em;margin:1.2rem 0 1rem}.library-header p{max-width:650px;color:var(--color-muted);font-size:1.08rem}.book-grid{display:grid;gap:2rem}.book-card{display:grid;grid-template-columns:minmax(190px,280px) 1fr;gap:clamp(2rem,5vw,4rem);padding:clamp(1.25rem,3vw,2.25rem);border:1px solid var(--color-border);border-radius:24px;background:rgba(255,255,255,.72);box-shadow:0 20px 70px rgba(42,31,88,.07)}.book-cover{aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#eee;box-shadow:0 16px 34px rgba(31,25,48,.16)}.book-cover img{width:100%;height:100%;object-fit:cover}.cover-placeholder{height:100%;padding:1.5rem;display:flex;flex-direction:column;justify-content:space-between;color:#fff;background:linear-gradient(145deg,#151128,#6c4de6)}.cover-placeholder span{font:500 .65rem var(--font-mono);letter-spacing:.15em}.cover-placeholder strong{font:600 1.5rem var(--font-serif);line-height:1.1}.book-info{align-self:center}.book-meta{display:flex;gap:1rem;color:var(--color-cyan);font:500 .65rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase}.book-info h2{font-size:clamp(1.8rem,4vw,3.2rem);letter-spacing:-.04em;margin:.8rem 0}.book-info p{color:var(--color-muted);max-width:630px;margin-bottom:1.5rem}.empty-state{text-align:center;padding:5rem 1.5rem;border:1px dashed rgba(108,77,230,.3);border-radius:24px;background:var(--color-surface-soft)}.empty-state span{display:block;color:var(--color-accent);font-size:2rem}.empty-state h2{margin:.7rem 0}.empty-state p{color:var(--color-muted)}dialog{width:min(calc(100% - 2rem),520px);padding:2rem;border:1px solid var(--color-border);border-radius:20px;background:#fff;color:var(--color-text);box-shadow:0 28px 100px rgba(20,14,45,.3)}dialog::backdrop{background:rgba(17,13,28,.6);backdrop-filter:blur(5px)}dialog h2{font-size:1.65rem;margin:.8rem 2rem .35rem 0}.dialog-intro{color:var(--color-muted);margin-bottom:1.5rem}.dialog-close{position:absolute;right:1rem;top:.8rem;border:0;background:none;color:var(--color-muted);font-size:1.8rem;cursor:pointer}.honeypot{position:absolute;left:-10000px}.privacy-note{font-size:.72rem;color:var(--color-muted);line-height:1.5;margin:-.25rem 0 1rem}.form-message{display:none;font-size:.8rem;margin-bottom:1rem}.form-message.success,.form-message.error{display:block}.form-message.success{color:#157a3b}.form-message.error{color:#b42323}.submit-download{width:100%}.submit-download:disabled{opacity:.65;cursor:wait}@media(max-width:680px){.book-card{grid-template-columns:1fr}.book-cover{width:min(70%,240px);margin:auto}.library-header{margin-bottom:2.5rem}dialog{padding:1.5rem}}
+</style>

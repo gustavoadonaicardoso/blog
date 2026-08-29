@@ -41,12 +41,12 @@ const socialImage = image ? new URL(image, Astro.site ?? Astro.url.origin).toStr
     input[type='text'],input[type='email'],input[type='url'],input[type='password'],textarea,select{padding:.9rem 1rem;background:#fff}input::placeholder,textarea::placeholder{color:#9a96a1}
     .btn-secondary{background:#fff}.alert-success{color:#157a3b}.alert-error{color:#b42323}
     @media(max-width:900px){:root{--spacing-lg:4.5rem}.container{width:min(calc(100% - 3rem),var(--max-width))}}
-    @media(max-width:640px){html{font-size:16px}.container{width:min(calc(100% - 2rem),var(--max-width))}.site-header .container{min-height:70px;gap:.75rem}.site-logo img{height:42px;max-width:168px}.site-nav{gap:0}.site-nav a{padding:.5rem .6rem;font-size:.7rem}.site-main{padding-top:3.5rem}}
+    @media(max-width:640px){html{font-size:16px}.container{width:min(calc(100% - 2rem),var(--max-width))}.site-header .container{min-height:70px;gap:.5rem}.site-logo img{height:38px;max-width:142px}.site-nav{gap:0}.site-nav a{padding:.45rem .42rem;font-size:.64rem}.site-main{padding-top:3.5rem}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
   </style>
 </head>
 <body>
-  <header class="site-header"><div class="container"><a href="/" class="site-logo" aria-label="Vórtice — início"><img src="/logo-vortice.svg" alt="Vórtice" width="240" height="60" /></a><nav aria-label="Navegação principal"><ul class="site-nav"><li><a href="/" aria-current={pathname==='/'?'page':undefined}>Início</a></li><li><a href="/artigos" aria-current={pathname.startsWith('/artigos')?'page':undefined}>Artigos</a></li><li><a href="/contato" aria-current={pathname==='/contato'?'page':undefined}>Contato</a></li></ul></nav></div></header>
+  <header class="site-header"><div class="container"><a href="/" class="site-logo" aria-label="Vórtice — início"><img src="/logo-vortice.svg" alt="Vórtice" width="240" height="60" /></a><nav aria-label="Navegação principal"><ul class="site-nav"><li><a href="/" aria-current={pathname==='/'?'page':undefined}>Início</a></li><li><a href="/artigos" aria-current={pathname.startsWith('/artigos')?'page':undefined}>Artigos</a></li><li><a href="/biblioteca" aria-current={pathname.startsWith('/biblioteca')?'page':undefined}>Biblioteca</a></li><li><a href="/contato" aria-current={pathname==='/contato'?'page':undefined}>Contato</a></li></ul></nav></div></header>
   <main class="site-main"><div class="container"><slot /></div></main>
   <footer class="site-footer"><div class="container"><p>© {new Date().getFullYear()} VÓRTICE / IDEIAS EM MOVIMENTO</p><p><a href="/privacidade">PRIVACIDADE</a> · <a href="/patrocinar">PATROCINE O BLOG ↗</a></p></div></footer>
   <NewsletterPopup />
