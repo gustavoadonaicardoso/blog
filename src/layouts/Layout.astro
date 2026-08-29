@@ -1,6 +1,7 @@
 ---
 import NewsletterPopup from '../components/NewsletterPopup.astro';
 import CookieConsent from '../components/CookieConsent.astro';
+import NewsTicker from '../components/NewsTicker.astro';
 export interface Props { title?: string; description?: string; image?: string; imageAlt?: string; article?: boolean; }
 const { title = 'Vórtice', description = 'Ideias que giram.', image, imageAlt, article = false } = Astro.props;
 const pageTitle = title === 'Vórtice' ? 'Vórtice' : `${title} — Vórtice`;
@@ -46,6 +47,7 @@ const socialImage = image ? new URL(image, Astro.site ?? Astro.url.origin).toStr
   </style>
 </head>
 <body>
+  <NewsTicker />
   <header class="site-header"><div class="container"><a href="/" class="site-logo" aria-label="Vórtice — início"><img src="/logo-vortice.svg" alt="Vórtice" width="240" height="60" /></a><nav aria-label="Navegação principal"><ul class="site-nav"><li><a href="/" aria-current={pathname==='/'?'page':undefined}>Início</a></li><li><a href="/artigos" aria-current={pathname.startsWith('/artigos')?'page':undefined}>Artigos</a></li><li><a href="/biblioteca" aria-current={pathname.startsWith('/biblioteca')?'page':undefined}>Biblioteca</a></li><li><a href="/contato" aria-current={pathname==='/contato'?'page':undefined}>Contato</a></li></ul></nav></div></header>
   <main class="site-main"><div class="container"><slot /></div></main>
   <footer class="site-footer"><div class="container"><p>© {new Date().getFullYear()} VÓRTICE / IDEIAS EM MOVIMENTO</p><p><a href="/privacidade">PRIVACIDADE</a> · <a href="/patrocinar">PATROCINE O BLOG ↗</a></p></div></footer>
