@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PostCard from '../components/PostCard.astro';
+import HomeBanners from '../components/HomeBanners.astro';
 import { createClient } from '../lib/supabase';
 
 const supabase = createClient(Astro.cookies, Astro.request);
@@ -11,9 +12,15 @@ const { data: posts } = await supabase
   .eq('published', true)
   .order('created_at', { ascending: false })
   .limit(6);
+const { data: banners } = await supabase
+  .from('home_banners')
+  .select('id, title, image_url, mobile_image_url, image_alt, destination_url, display_seconds')
+  .eq('active', true)
+  .order('created_at', { ascending: false });
 ---
 
 <Layout title="Vórtice" description="Ideias que giram.">
+  <HomeBanners banners={banners ?? []} />
   <section class="hero">
     <div class="hero-copy">
       <div class="eyebrow"><span></span> Sinal aberto / 2026</div>

@@ -1,0 +1,46 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { requireAuth } from '../../../lib/auth';
+import { createClient } from '../../../lib/supabase';
+const authRedirect = await requireAuth(Astro.cookies, Astro.request);
+if (authRedirect) return authRedirect;
+const supabase = createClient(Astro.cookies, Astro.request);
+const { data: banners } = await supabase.from('home_banners').select('*').order('created_at', { ascending: false });
+const error = Astro.url.searchParams.get('erro');
+const messages: Record<string, string> = { campos: 'Revise os campos e o link de destino.', formato: 'Use uma imagem JPEG, PNG, WebP ou AVIF.', tamanho: 'Cada imagem deve ter no máximo 8 MB.', upload: 'Falha no upload. Verifique a configuração do Storage.', imagem: 'A imagem para desktop é obrigatória.', db: 'Não foi possível salvar o banner.' };
+---
+
+<AdminLayout title="Banners da Home">
+  {Astro.url.searchParams.get('ok') && <div class="alert alert-success">Banner criado e publicado.</div>}
+  {error && <div class="alert alert-error">{messages[error] ?? 'Não foi possível concluir.'}</div>}
+  <div class="banner-grid">
+    <section class="card create-card">
+      <h2>Novo banner</h2><p class="intro">Crie uma chamada clicável para o topo da página inicial.</p>
+      <form method="POST" action="/api/admin/banners/salvar" enctype="multipart/form-data">
+        <div class="form-group"><label for="title">Título *</label><input id="title" name="title" type="text" minlength="2" maxlength="120" required /></div>
+        <div class="form-group"><label for="destination_url">Link de destino *</label><input id="destination_url" name="destination_url" type="text" placeholder="https://... ou /artigos/..." required /></div>
+        <div class="form-group"><label for="image">Imagem desktop *</label><input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required /><small>Recomendado: 1200 × 400 px.</small></div>
+        <div class="form-group"><label for="mobile_image">Imagem mobile</label><input id="mobile_image" name="mobile_image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" /><small>Opcional. Recomendado: 800 × 1000 px.</small></div>
+        <div class="form-group"><label for="image_alt">Descrição da imagem *</label><input id="image_alt" name="image_alt" type="text" minlength="2" maxlength="180" required /></div>
+        <div class="form-group"><label for="display_seconds">Tempo na tela</label><select id="display_seconds" name="display_seconds"><option value="5">5 segundos</option><option value="7" selected>7 segundos</option><option value="10">10 segundos</option><option value="15">15 segundos</option></select></div>
+        <button class="btn btn-primary" type="submit">Criar banner</button>
+      </form>
+    </section>
+    <section class="banner-list">
+      {banners?.length ? banners.map((banner) => (
+        <article class="card banner-item">
+          <img src={banner.image_url} alt="" width="360" height="120" />
+          <div class="banner-info"><div><span class:list={['badge', banner.active ? 'badge-green' : 'badge-gray']}>{banner.active ? 'Ativo' : 'Inativo'}</span><span class="duration">{banner.display_seconds}s</span></div><h3>{banner.title}</h3><a href={banner.destination_url} target="_blank" rel="noopener">{banner.destination_url} ↗</a></div>
+          <div class="banner-actions">
+            <form method="POST" action="/api/admin/banners/acao"><input type="hidden" name="id" value={banner.id} /><button class="btn btn-secondary btn-sm" name="action" value={banner.active ? 'deactivate' : 'activate'}>{banner.active ? 'Desativar' : 'Ativar'}</button></form>
+            <form method="POST" action="/api/admin/banners/acao" onsubmit="return confirm('Excluir este banner permanentemente?')"><input type="hidden" name="id" value={banner.id} /><button class="btn btn-danger btn-sm" name="action" value="delete">Excluir</button></form>
+          </div>
+        </article>
+      )) : <div class="card empty">Nenhum banner criado ainda.</div>}
+    </section>
+  </div>
+</AdminLayout>
+
+<style>
+  .banner-grid{display:grid;grid-template-columns:minmax(300px,420px) minmax(0,1fr);gap:1.25rem;align-items:start}.create-card h2{font-size:1.3rem}.intro{margin:.35rem 0 1.5rem;color:var(--color-muted);font-size:.78rem}.form-group small{display:block;margin-top:.35rem;color:var(--color-muted);font-size:.65rem}.banner-list{display:grid;gap:1rem}.banner-item{display:grid;grid-template-columns:180px minmax(0,1fr) auto;gap:1.25rem;align-items:center;margin:0}.banner-item>img{display:block;width:180px;aspect-ratio:3/1;border-radius:9px;object-fit:cover}.banner-info>div{display:flex;align-items:center;gap:.6rem}.duration{font:500 .6rem var(--font-mono);color:var(--color-muted)}.banner-info h3{margin:.45rem 0 .25rem;font-size:1rem}.banner-info>a{display:block;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.68rem}.banner-actions{display:flex;gap:.4rem;flex-wrap:wrap}.empty{color:var(--color-muted);font-size:.85rem}@media(max-width:1100px){.banner-grid{grid-template-columns:1fr}.create-card{max-width:680px}}@media(max-width:650px){.banner-item{grid-template-columns:1fr}.banner-item>img{width:100%}.banner-actions{justify-content:flex-start}}
+</style>
