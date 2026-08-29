@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClientFromRequest } from '../../../../lib/supabase';
+import { uploadPostImage } from '../../../../lib/post-image';
 
 export const POST: APIRoute = async ({ request }) => {
   const responseHeaders = new Headers();
@@ -21,10 +22,17 @@ export const POST: APIRoute = async ({ request }) => {
   const sponsor_name = is_sponsored ? ((form.get('sponsor_name') as string) || null) : null;
   const sponsor_url = is_sponsored ? ((form.get('sponsor_url') as string) || null) : null;
   const sponsor_badge = is_sponsored ? ((form.get('sponsor_badge') as string) || null) : null;
+  const image_alt = String(form.get('image_alt') ?? '').trim().slice(0, 180) || null;
 
   if (!title || !slug) {
     responseHeaders.set('Location', '/admin/posts/novo?erro=campos');
     return new Response(null, { status: 302, headers: responseHeaders });
+  }
+
+  const image = await uploadPostImage(supabase, form.get('image'));
+  if (image.error) {
+    responseHeaders.set('Location', `/admin/posts/novo?erro=${image.error}`);
+    return new Response(null, { status: 303, headers: responseHeaders });
   }
 
   const { error } = await supabase.from('posts').insert({
@@ -37,6 +45,8 @@ export const POST: APIRoute = async ({ request }) => {
     sponsor_name,
     sponsor_url,
     sponsor_badge,
+    image_url: image.url,
+    image_alt: image.url ? image_alt : null,
   });
 
   if (error) {

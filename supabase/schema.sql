@@ -10,6 +10,8 @@ create table posts (
   slug text not null unique,
   excerpt text,
   content text,
+  image_url text,
+  image_alt text,
   published boolean default false,
   is_sponsored boolean default false,
   sponsor_name text,
@@ -87,6 +89,20 @@ create table comments (
   created_at timestamptz not null default now()
 );
 
+-- home_banners: carrossel de chamadas da página inicial
+create table home_banners (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  image_url text not null,
+  mobile_image_url text,
+  image_alt text not null,
+  destination_url text not null,
+  display_seconds smallint not null default 7 check (display_seconds between 3 and 30),
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- =============================================================
 -- Row Level Security
 -- =============================================================
@@ -152,6 +168,11 @@ create policy "public submit comments" on comments
 create policy "admin all" on comments
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
+alter table home_banners enable row level security;
+create policy "public read active home banners" on home_banners for select using (active = true);
+create policy "admin all" on home_banners
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
 -- =============================================================
 -- Índices úteis
 -- =============================================================
@@ -163,3 +184,4 @@ create index if not exists idx_ad_campaigns_delivery on ad_campaigns(approved, a
 create unique index if not exists idx_marketing_leads_email on marketing_leads(lower(email));
 create index if not exists idx_marketing_leads_active on marketing_leads(unsubscribed_at, created_at desc);
 create index if not exists idx_comments_post_approved on comments(post_id, approved, created_at desc);
+create index if not exists idx_home_banners_active on home_banners(active, created_at desc);

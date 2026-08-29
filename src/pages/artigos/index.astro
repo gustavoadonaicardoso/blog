@@ -13,7 +13,7 @@ const supabase = createClient(Astro.cookies, Astro.request);
 
 const { data: posts, count } = await supabase
   .from('posts')
-  .select('id, title, slug, excerpt, created_at, is_sponsored, sponsor_name', { count: 'exact' })
+  .select('id, title, slug, excerpt, created_at, is_sponsored, sponsor_name, image_url, image_alt', { count: 'exact' })
   .eq('published', true)
   .order('created_at', { ascending: false })
   .range(from, to);
@@ -39,6 +39,8 @@ const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
           created_at={post.created_at}
           is_sponsored={post.is_sponsored}
           sponsor_name={post.sponsor_name}
+          image_url={post.image_url}
+          image_alt={post.image_alt}
         />
       ))}
     </div>

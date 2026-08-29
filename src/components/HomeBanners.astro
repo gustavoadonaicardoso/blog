@@ -1,0 +1,60 @@
+---
+interface Banner { id: string; title: string; image_url: string; mobile_image_url?: string | null; image_alt: string; destination_url: string; display_seconds: number; }
+const { banners } = Astro.props as { banners: Banner[] };
+---
+
+{banners.length > 0 && (
+  <section class="banner-carousel" data-banner-carousel aria-roledescription="carrossel" aria-label="Destaques">
+    <div class="banner-viewport">
+      {banners.map((banner, index) => (
+        <article class="banner-slide" data-banner-slide data-seconds={banner.display_seconds} hidden={index !== 0} aria-label={`${index + 1} de ${banners.length}`}>
+          <a href={banner.destination_url} aria-label={`${banner.title}: acessar link`}>
+            <picture>
+              {banner.mobile_image_url && <source media="(max-width: 640px)" srcset={banner.mobile_image_url} />}
+              <img src={banner.image_url} alt={banner.image_alt} width="1200" height="400" loading={index === 0 ? 'eager' : 'lazy'} />
+            </picture>
+            <span class="banner-label"><small>Destaque</small><strong>{banner.title}</strong><b>Acessar →</b></span>
+          </a>
+        </article>
+      ))}
+    </div>
+    {banners.length > 1 && (
+      <div class="banner-controls">
+        <button type="button" data-banner-prev aria-label="Banner anterior">←</button>
+        <div class="banner-dots" role="tablist" aria-label="Escolher banner">
+          {banners.map((banner, index) => <button type="button" data-banner-dot={index} class:list={{ active: index === 0 }} aria-label={`Mostrar ${banner.title}`} aria-selected={index === 0} />)}
+        </div>
+        <button type="button" data-banner-next aria-label="Próximo banner">→</button>
+      </div>
+    )}
+  </section>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-banner-carousel]').forEach((carousel) => {
+    const slides = [...carousel.querySelectorAll<HTMLElement>('[data-banner-slide]')];
+    const dots = [...carousel.querySelectorAll<HTMLButtonElement>('[data-banner-dot]')];
+    if (slides.length < 2) return;
+    let current = 0;
+    let timer = 0;
+    const show = (next: number) => {
+      current = (next + slides.length) % slides.length;
+      slides.forEach((slide, index) => { slide.hidden = index !== current; });
+      dots.forEach((dot, index) => { dot.classList.toggle('active', index === current); dot.setAttribute('aria-selected', String(index === current)); });
+      schedule();
+    };
+    const schedule = () => { window.clearTimeout(timer); if (!carousel.matches(':hover') && !carousel.contains(document.activeElement)) timer = window.setTimeout(() => show(current + 1), Number(slides[current].dataset.seconds ?? 7) * 1000); };
+    carousel.querySelector('[data-banner-prev]')?.addEventListener('click', () => show(current - 1));
+    carousel.querySelector('[data-banner-next]')?.addEventListener('click', () => show(current + 1));
+    dots.forEach((dot, index) => dot.addEventListener('click', () => show(index)));
+    carousel.addEventListener('mouseenter', () => window.clearTimeout(timer));
+    carousel.addEventListener('mouseleave', schedule);
+    carousel.addEventListener('focusin', () => window.clearTimeout(timer));
+    carousel.addEventListener('focusout', () => window.setTimeout(schedule));
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) schedule();
+  });
+</script>
+
+<style>
+  .banner-carousel{margin:-2rem 0 5rem}.banner-viewport{overflow:hidden;border:1px solid var(--color-border);border-radius:20px;background:var(--color-surface);box-shadow:0 22px 55px rgba(40,25,85,.08)}.banner-slide>a{position:relative;display:block;aspect-ratio:3/1;overflow:hidden;color:#fff}.banner-slide picture,.banner-slide img{display:block;width:100%;height:100%}.banner-slide img{object-fit:cover}.banner-slide>a::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,8,16,.78),rgba(10,8,16,.08) 65%)}.banner-label{position:absolute;z-index:1;left:clamp(1.4rem,4vw,3.4rem);bottom:clamp(1.3rem,4vw,3rem);max-width:540px}.banner-label small,.banner-label strong,.banner-label b{display:block}.banner-label small{margin-bottom:.45rem;font:500 .58rem var(--font-mono);letter-spacing:.13em;text-transform:uppercase;color:#c8bcff}.banner-label strong{font:600 clamp(1.35rem,3vw,2.5rem) var(--font-serif);line-height:1.1}.banner-label b{margin-top:.8rem;font-size:.7rem}.banner-controls{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1rem}.banner-controls>button{width:34px;height:34px;border:1px solid var(--color-border);border-radius:50%;background:#fff;color:var(--color-text);cursor:pointer}.banner-dots{display:flex;gap:.45rem}.banner-dots button{width:7px;height:7px;padding:0;border:0;border-radius:999px;background:#c9c5d0;cursor:pointer;transition:.2s}.banner-dots button.active{width:24px;background:var(--color-accent)}@media(max-width:640px){.banner-carousel{margin:-1.5rem 0 3.5rem}.banner-viewport{margin:0 -1rem;border-left:0;border-right:0;border-radius:0}.banner-slide>a{aspect-ratio:4/5}.banner-slide>a::after{background:linear-gradient(0deg,rgba(10,8,16,.82),rgba(10,8,16,.02) 68%)}.banner-label{right:1.3rem}.banner-label strong{font-size:1.65rem}}
+</style>

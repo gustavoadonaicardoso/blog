@@ -6,9 +6,11 @@ export interface Props {
   created_at: string;
   is_sponsored?: boolean;
   sponsor_name?: string;
+  image_url?: string;
+  image_alt?: string;
 }
 
-const { title, slug, excerpt, created_at, is_sponsored, sponsor_name } = Astro.props;
+const { title, slug, excerpt, created_at, is_sponsored, sponsor_name, image_url, image_alt } = Astro.props;
 
 const date = new Date(created_at).toLocaleDateString('pt-BR', {
   day: '2-digit',
@@ -19,6 +21,7 @@ const date = new Date(created_at).toLocaleDateString('pt-BR', {
 
 <article class="post-card">
   <span class="post-index" aria-hidden="true"></span>
+  {image_url && <a href={`/artigos/${slug}`} class="post-image" tabindex="-1" aria-hidden="true"><img src={image_url} alt={image_alt || ''} width="400" height="210" loading="lazy" /></a>}
   <div class="post-body">
   <div class="post-meta">
     <time datetime={created_at}>{date}</time>
@@ -40,7 +43,7 @@ const date = new Date(created_at).toLocaleDateString('pt-BR', {
     position:relative;display:grid;grid-template-columns:36px 1fr auto;gap:1.2rem;align-items:start;padding:2.25rem 1rem;
     border-bottom: 1px solid var(--color-border, #e8e8e8);
   }
-  .post-card{transition:background .25s ease,padding .25s ease}.post-card:hover{background:linear-gradient(90deg,rgba(155,135,255,.07),transparent 72%);padding-left:1.4rem}.post-index::before{content:'//';font:400 .62rem var(--font-mono);color:#625e6b}.post-body{min-width:0}.post-arrow{align-self:center;display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--color-border);border-radius:50%;color:var(--color-muted);transition:.2s ease}.post-card:hover .post-arrow{color:var(--color-cyan);border-color:rgba(110,231,242,.35);transform:rotate(8deg)}
+  .post-card{transition:background .25s ease,padding .25s ease}.post-card:hover{background:linear-gradient(90deg,rgba(155,135,255,.07),transparent 72%);padding-left:1.4rem}.post-index::before{content:'//';font:400 .62rem var(--font-mono);color:#625e6b}.post-body{min-width:0}.post-image{display:block;width:clamp(150px,20vw,235px);aspect-ratio:1.65;overflow:hidden;border-radius:12px;background:var(--color-surface)}.post-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .35s ease}.post-card:hover .post-image img{transform:scale(1.035)}.post-arrow{align-self:center;display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--color-border);border-radius:50%;color:var(--color-muted);transition:.2s ease}.post-card:hover .post-arrow{color:var(--color-cyan);border-color:rgba(110,231,242,.35);transform:rotate(8deg)}
 
   .post-card:last-child {
     border-bottom: none;
@@ -109,8 +112,8 @@ const date = new Date(created_at).toLocaleDateString('pt-BR', {
   .read-more span{margin-left:.35rem}@media(max-width:640px){.post-card{grid-template-columns:24px 1fr;padding:1.7rem 0}.post-card:hover{padding-left:.4rem}.post-arrow{display:none}.post-excerpt{-webkit-line-clamp:2}.post-index::before{font-size:.55rem}}
 
   /* More breathing room between entries */
-  .post-card{grid-template-columns:40px 1fr auto;gap:1.75rem;padding:2.75rem 1.25rem}.post-card:hover{background:linear-gradient(90deg,rgba(108,77,230,.055),transparent 72%);padding-left:1.65rem}.post-meta,.post-title{margin-bottom:.8rem}.post-excerpt{margin-bottom:1rem}
-  @media(max-width:640px){.post-card{grid-template-columns:20px 1fr;gap:.8rem;padding:2rem 0}.post-card:hover{padding-left:.3rem}.post-excerpt{-webkit-line-clamp:3}}
+  .post-card{grid-template-columns:40px auto minmax(0,1fr) auto;gap:1.75rem;padding:2.75rem 1.25rem}.post-card:not(:has(.post-image)){grid-template-columns:40px minmax(0,1fr) auto}.post-card:hover{background:linear-gradient(90deg,rgba(108,77,230,.055),transparent 72%);padding-left:1.65rem}.post-meta,.post-title{margin-bottom:.8rem}.post-excerpt{margin-bottom:1rem}
+  @media(max-width:760px){.post-card,.post-card:not(:has(.post-image)){grid-template-columns:20px minmax(0,1fr);gap:.8rem;padding:2rem 0}.post-card:hover{padding-left:.3rem}.post-image{grid-column:2;width:100%;aspect-ratio:16/9;margin-bottom:.45rem}.post-body{grid-column:2}.post-excerpt{-webkit-line-clamp:3}}
   .read-more:hover {
     text-decoration: underline;
   }
