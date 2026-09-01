@@ -55,6 +55,31 @@ const errorMessages: Record<string, string> = {
         <label for="content">Conteúdo (Markdown)</label>
         <textarea id="content" name="content" placeholder="# Título&#10;&#10;Escreva seu conteúdo em Markdown..."></textarea>
       </div>
+
+      <div class="form-group form-full translation-panel">
+        <h3>Traduções opcionais</h3>
+        <p>Preencha título, resumo e conteúdo para disponibilizar este artigo em espanhol e inglês. O português é o idioma original.</p>
+        <div class="translation-grid">
+          <fieldset>
+            <legend>Español</legend>
+            <label for="title_es">Título</label>
+            <input type="text" id="title_es" name="title_es" placeholder="Título en español" />
+            <label for="excerpt_es">Resumo</label>
+            <textarea id="excerpt_es" name="excerpt_es" rows="3" placeholder="Resumen en español"></textarea>
+            <label for="content_es">Conteúdo (Markdown)</label>
+            <textarea id="content_es" name="content_es" rows="10" placeholder="Contenido en español..."></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>English</legend>
+            <label for="title_en">Título</label>
+            <input type="text" id="title_en" name="title_en" placeholder="Title in English" />
+            <label for="excerpt_en">Resumo</label>
+            <textarea id="excerpt_en" name="excerpt_en" rows="3" placeholder="Summary in English"></textarea>
+            <label for="content_en">Conteúdo (Markdown)</label>
+            <textarea id="content_en" name="content_en" rows="10" placeholder="Content in English..."></textarea>
+          </fieldset>
+        </div>
+      </div>
     </div>
 
     <div class="checkbox-group">
@@ -150,9 +175,10 @@ const errorMessages: Record<string, string> = {
   .form-full {
     grid-column: 1 / -1;
   }
+  .translation-panel{padding:1.25rem;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface)}.translation-panel h3{margin-bottom:.35rem;color:var(--color-accent);font-size:1rem}.translation-panel>p{margin-bottom:1rem;color:var(--color-muted);font-size:.75rem}.translation-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.translation-grid fieldset{min-width:0;padding:1rem;border:1px solid var(--color-border);border-radius:9px;background:#fff}.translation-grid legend{padding:0 .3rem;font-weight:700;font-size:.82rem;color:var(--color-accent)}.translation-grid label{display:block;margin:.8rem 0 .35rem;font-size:.7rem}.translation-grid label:first-of-type{margin-top:.2rem}.translation-grid input,.translation-grid textarea{width:100%;padding:.7rem;border:1px solid var(--color-border);border-radius:8px;font:inherit}.translation-grid textarea{resize:vertical;min-height:80px}
   .image-field small,.field-help{display:block;margin-top:.4rem;color:var(--color-muted);font-size:.72rem}.image-preview{display:block;width:min(100%,680px);aspect-ratio:1200/630;margin-top:1rem;border:1px solid var(--color-border);border-radius:12px;object-fit:cover}
 
   @media (max-width: 600px) {
-    .form-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }.translation-grid{grid-template-columns:1fr}
   }
 </style>

@@ -1,4 +1,6 @@
 ---
+import { copy, type Locale } from '../lib/i18n';
+
 interface Comment {
   id: string;
   name: string;
@@ -11,23 +13,25 @@ interface Props {
   slug: string;
   comments: Comment[];
   status?: string;
+  locale?: Locale;
 }
 
-const { postId, slug, comments, status } = Astro.props;
+const { postId, slug, comments, status, locale = 'pt-BR' } = Astro.props;
+const labels = copy[locale];
 ---
 
 <section class="comments" id="comentarios" aria-labelledby="comments-title">
   <header class="comments-header">
     <div>
-      <span class="eyebrow">Conversa</span>
-      <h2 id="comments-title">Comentários <small>{comments.length}</small></h2>
+      <span class="eyebrow">{labels.conversation}</span>
+      <h2 id="comments-title">{labels.comments} <small>{comments.length}</small></h2>
     </div>
-    <p>Participe com respeito e contribua para a discussão.</p>
+    <p>{labels.joinDiscussion}</p>
   </header>
 
-  {status === 'enviado' && <p class="notice success" role="status">Comentário enviado. Ele aparecerá após a moderação.</p>}
-  {status === 'invalido' && <p class="notice error" role="alert">Revise os campos. O comentário deve ter entre 3 e 2.000 caracteres.</p>}
-  {status === 'erro' && <p class="notice error" role="alert">Não foi possível enviar agora. Tente novamente em instantes.</p>}
+  {status === 'enviado' && <p class="notice success" role="status">{labels.commentSent}</p>}
+  {status === 'invalido' && <p class="notice error" role="alert">{labels.commentInvalid}</p>}
+  {status === 'erro' && <p class="notice error" role="alert">{labels.commentError}</p>}
 
   <div class="comment-list">
     {comments.length > 0 ? comments.map((comment) => (
@@ -44,14 +48,15 @@ const { postId, slug, comments, status } = Astro.props;
   <form class="comment-form" id="comentar" action="/api/comentarios" method="POST">
     <input type="hidden" name="post_id" value={postId} />
     <input type="hidden" name="slug" value={slug} />
+    <input type="hidden" name="lang" value={locale} />
     <div class="honeypot" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
-    <div class="form-heading"><div><span class="eyebrow">Sua voz</span><h3>Deixe um comentário</h3></div><span class="required">Todos os campos são obrigatórios</span></div>
+    <div class="form-heading"><div><span class="eyebrow">{labels.conversation}</span><h3>{labels.leaveComment}</h3></div><span class="required">{labels.allFieldsRequired}</span></div>
     <div class="fields">
-      <label>Nome<input name="name" type="text" minlength="2" maxlength="80" autocomplete="name" required /></label>
-      <label>E-mail <small>(não será publicado)</small><input name="email" type="email" maxlength="254" autocomplete="email" required /></label>
+      <label>{labels.name}<input name="name" type="text" minlength="2" maxlength="80" autocomplete="name" required /></label>
+      <label>{labels.email} <small>({labels.notPublished})</small><input name="email" type="email" maxlength="254" autocomplete="email" required /></label>
     </div>
-    <label>Comentário<textarea name="content" minlength="3" maxlength="2000" rows="6" required></textarea></label>
-    <div class="submit-row"><p>Ao enviar, você concorda com a moderação do conteúdo.</p><button type="submit">Enviar comentário <span>→</span></button></div>
+    <label>{labels.comment}<textarea name="content" minlength="3" maxlength="2000" rows="6" required></textarea></label>
+    <div class="submit-row"><p>{labels.moderation}</p><button type="submit">{labels.sendComment} <span>→</span></button></div>
   </form>
 </section>
 

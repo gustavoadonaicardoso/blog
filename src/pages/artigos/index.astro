@@ -2,6 +2,10 @@
 import Layout from '../../layouts/Layout.astro';
 import PostCard from '../../components/PostCard.astro';
 import { createClient } from '../../lib/supabase';
+import { copy, getLocale, localizePost } from '../../lib/i18n';
+
+const locale = getLocale(Astro.url);
+const labels = copy[locale];
 
 const PAGE_SIZE = 10;
 const pageParam = Astro.url.searchParams.get('pagina');
@@ -13,25 +17,26 @@ const supabase = createClient(Astro.cookies, Astro.request);
 
 const { data: posts, count } = await supabase
   .from('posts')
-  .select('id, title, slug, excerpt, created_at, is_sponsored, sponsor_name, image_url, image_alt', { count: 'exact' })
+  .select('*', { count: 'exact' })
   .eq('published', true)
   .order('created_at', { ascending: false })
   .range(from, to);
 
 const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
+const localizedPosts = (posts ?? []).map((post) => ({ ...post, ...localizePost(post, locale) }));
 ---
 
-<Layout title="Artigos" description="Todos os artigos publicados no Vórtice.">
+<Layout title={labels.articles} description={labels.allArticles} locale={locale}>
   <div class="page-header">
-    <h1>Artigos</h1>
+    <h1>{labels.articles}</h1>
     {count !== null && count !== undefined && (
-      <p class="total">{count} {count === 1 ? 'artigo publicado' : 'artigos publicados'}</p>
+      <p class="total">{count} {count === 1 ? labels.publishedArticle : labels.publishedArticles}</p>
     )}
   </div>
 
-  {posts && posts.length > 0 ? (
+  {localizedPosts.length > 0 ? (
     <div class="posts-list">
-      {posts.map((post) => (
+      {localizedPosts.map((post) => (
         <PostCard
           title={post.title}
           slug={post.slug}
@@ -41,21 +46,25 @@ const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
           sponsor_name={post.sponsor_name}
           image_url={post.image_url}
           image_alt={post.image_alt}
+          locale={locale}
+          readMoreLabel={labels.readArticle}
+          sponsoredLabel={labels.sponsored}
+          sponsoredByLabel={labels.sponsoredBy}
         />
       ))}
     </div>
   ) : (
-    <p class="empty">Nenhum artigo publicado ainda.</p>
+    <p class="empty">{labels.noArticles}</p>
   )}
 
   {totalPages > 1 && (
     <nav class="pagination" aria-label="Paginação">
       {currentPage > 1 && (
-        <a href={`/artigos?pagina=${currentPage - 1}`} class="page-link">← Anterior</a>
+        <a href={`/artigos?pagina=${currentPage - 1}${locale === 'pt-BR' ? '' : `&lang=${locale}`}`} class="page-link">← {labels.previous}</a>
       )}
-      <span class="page-info">Página {currentPage} de {totalPages}</span>
+      <span class="page-info">{labels.page} {currentPage} de {totalPages}</span>
       {currentPage < totalPages && (
-        <a href={`/artigos?pagina=${currentPage + 1}`} class="page-link">Próxima →</a>
+        <a href={`/artigos?pagina=${currentPage + 1}${locale === 'pt-BR' ? '' : `&lang=${locale}`}`} class="page-link">{labels.next} →</a>
       )}
     </nav>
   )}

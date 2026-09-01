@@ -1,4 +1,6 @@
 ---
+import { formatDate, localizedPath, type Locale } from '../lib/i18n';
+
 export interface Props {
   title: string;
   slug: string;
@@ -8,34 +10,35 @@ export interface Props {
   sponsor_name?: string;
   image_url?: string;
   image_alt?: string;
+  locale?: Locale;
+  readMoreLabel?: string;
+  sponsoredLabel?: string;
+  sponsoredByLabel?: string;
 }
 
-const { title, slug, excerpt, created_at, is_sponsored, sponsor_name, image_url, image_alt } = Astro.props;
+const { title, slug, excerpt, created_at, is_sponsored, sponsor_name, image_url, image_alt, locale = 'pt-BR', readMoreLabel = 'Ler artigo', sponsoredLabel = 'Patrocinado', sponsoredByLabel = 'por' } = Astro.props;
+const articleHref = localizedPath(`/artigos/${slug}`, locale);
 
-const date = new Date(created_at).toLocaleDateString('pt-BR', {
-  day: '2-digit',
-  month: 'long',
-  year: 'numeric',
-});
+const date = formatDate(created_at, locale);
 ---
 
 <article class="post-card">
   <span class="post-index" aria-hidden="true"></span>
-  {image_url && <a href={`/artigos/${slug}`} class="post-image" tabindex="-1" aria-hidden="true"><img src={image_url} alt={image_alt || ''} width="400" height="210" loading="lazy" /></a>}
+  {image_url && <a href={articleHref} class="post-image" tabindex="-1" aria-hidden="true"><img src={image_url} alt={image_alt || ''} width="400" height="210" loading="lazy" /></a>}
   <div class="post-body">
   <div class="post-meta">
     <time datetime={created_at}>{date}</time>
     {is_sponsored && (
-      <span class="badge-sponsored">Patrocinado{sponsor_name ? ` por ${sponsor_name}` : ''}</span>
+      <span class="badge-sponsored">{sponsoredLabel}{sponsor_name ? ` ${sponsoredByLabel} ${sponsor_name}` : ''}</span>
     )}
   </div>
   <h2 class="post-title">
-    <a href={`/artigos/${slug}`}>{title}</a>
+    <a href={articleHref}>{title}</a>
   </h2>
   {excerpt && <p class="post-excerpt">{excerpt}</p>}
-  <a href={`/artigos/${slug}`} class="read-more" aria-label={`Ler: ${title}`}>Ler artigo <span>↗</span></a>
+  <a href={articleHref} class="read-more" aria-label={`${readMoreLabel}: ${title}`}>{readMoreLabel} <span>↗</span></a>
   </div>
-  <a href={`/artigos/${slug}`} class="post-arrow" tabindex="-1" aria-hidden="true">↗</a>
+  <a href={articleHref} class="post-arrow" tabindex="-1" aria-hidden="true">↗</a>
 </article>
 
 <style>

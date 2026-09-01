@@ -3,15 +3,20 @@ import Layout from '../layouts/Layout.astro';
 import PostCard from '../components/PostCard.astro';
 import HomeBanners from '../components/HomeBanners.astro';
 import { createClient } from '../lib/supabase';
+import { copy, getLocale, localizePost } from '../lib/i18n';
+
+const locale = getLocale(Astro.url);
+const labels = copy[locale];
 
 const supabase = createClient(Astro.cookies, Astro.request);
 
 const { data: posts } = await supabase
   .from('posts')
-  .select('id, title, slug, excerpt, created_at, is_sponsored, sponsor_name, image_url, image_alt')
+  .select('*')
   .eq('published', true)
   .order('created_at', { ascending: false })
   .limit(6);
+const localizedPosts = (posts ?? []).map((post) => ({ ...post, ...localizePost(post, locale) }));
 const { data: banners } = await supabase
   .from('home_banners')
   .select('id, title, image_url, mobile_image_url, image_alt, destination_url, display_seconds')
@@ -19,14 +24,14 @@ const { data: banners } = await supabase
   .order('created_at', { ascending: false });
 ---
 
-<Layout title="Vórtice" description="Ideias que giram.">
+<Layout title="Vórtice" description={labels.heroDescription} locale={locale}>
   <HomeBanners banners={banners ?? []} />
   <section class="hero">
     <div class="hero-copy">
-      <div class="eyebrow"><span></span> Sinal aberto / 2026</div>
-      <h1 class="hero-title">Ideias que<br /><em>movem o agora.</em></h1>
-      <p class="hero-description">Um espaço independente para decodificar tecnologia, cultura e as transformações do nosso tempo.</p>
-      <div class="hero-actions"><a href="/artigos" class="btn btn-primary">Explorar artigos <span>↗</span></a><a href="/contato" class="text-link">Entrar em contato →</a></div>
+      <div class="eyebrow"><span></span> {labels.heroEyebrow}</div>
+      <h1 class="hero-title">{labels.heroTitleFirst}<br /><em>{labels.heroTitleSecond}</em></h1>
+      <p class="hero-description">{labels.heroDescription}</p>
+      <div class="hero-actions"><a href={locale === 'pt-BR' ? '/artigos' : `/artigos?lang=${locale}`} class="btn btn-primary">{labels.exploreArticles} <span>↗</span></a><a href={locale === 'pt-BR' ? '/contato' : `/contato?lang=${locale}`} class="text-link">{labels.contactLink} →</a></div>
     </div>
     <div class="hero-visual" aria-hidden="true">
       <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
@@ -35,11 +40,11 @@ const { data: banners } = await supabase
   </section>
 
   <section class="posts-section">
-    <div class="section-header"><div><p class="section-kicker">Feed / Atualizações</p><h2 class="section-heading">Últimos artigos</h2></div><span class="section-count">{String(posts?.length ?? 0).padStart(2, '0')}</span></div>
+    <div class="section-header"><div><p class="section-kicker">{labels.feedLabel}</p><h2 class="section-heading">{labels.latestArticles}</h2></div><span class="section-count">{String(localizedPosts.length).padStart(2, '0')}</span></div>
 
-    {posts && posts.length > 0 ? (
+    {localizedPosts.length > 0 ? (
       <div class="posts-list">
-        {posts.map((post) => (
+        {localizedPosts.map((post) => (
           <PostCard
             title={post.title}
             slug={post.slug}
@@ -49,15 +54,19 @@ const { data: banners } = await supabase
             sponsor_name={post.sponsor_name}
             image_url={post.image_url}
             image_alt={post.image_alt}
+            locale={locale}
+            readMoreLabel={labels.readArticle}
+            sponsoredLabel={labels.sponsored}
+            sponsoredByLabel={labels.sponsoredBy}
           />
         ))}
       </div>
     ) : (
-      <p class="empty-state">Nenhum artigo publicado ainda.</p>
+      <p class="empty-state">{labels.noArticles}</p>
     )}
 
     <div class="all-posts-link">
-      <a href="/artigos" class="btn btn-secondary">Ver arquivo completo <span>↗</span></a>
+      <a href={locale === 'pt-BR' ? '/artigos' : `/artigos?lang=${locale}`} class="btn btn-secondary">{labels.allArticles} <span>↗</span></a>
     </div>
   </section>
 </Layout>

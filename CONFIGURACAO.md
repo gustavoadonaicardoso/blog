@@ -21,6 +21,15 @@ Se o projeto Supabase já existia antes do gerenciador de anúncios, execute tam
 Para ativar a captação de newsletter em um projeto existente, execute também
 [`supabase/marketing_leads.sql`](supabase/marketing_leads.sql) uma única vez.
 
+Para ativar as versões em espanhol e inglês em um projeto que já possui a tabela
+`posts`, execute [`supabase/post_translations.sql`](supabase/post_translations.sql)
+uma única vez. Não é necessário executar `schema.sql` inteiro novamente: ele foi
+escrito para a instalação inicial e suas tabelas-base podem já existir.
+
+Depois, abra cada artigo em `/admin/posts`, preencha os campos de **Español** e
+**English** e salve. O seletor `PT-BR · ES · EN` aparecerá no site; quando uma
+tradução ainda não estiver preenchida, o artigo permanece disponível em português.
+
 ## Campanhas de anúncios
 
 - Empresas enviam propostas em `/patrocinar`; elas entram como pendentes.

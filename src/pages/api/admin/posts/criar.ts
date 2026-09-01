@@ -17,6 +17,12 @@ export const POST: APIRoute = async ({ request }) => {
   const slug = form.get('slug') as string;
   const excerpt = (form.get('excerpt') as string) || null;
   const content = (form.get('content') as string) || null;
+  const title_es = (form.get('title_es') as string) || null;
+  const excerpt_es = (form.get('excerpt_es') as string) || null;
+  const content_es = (form.get('content_es') as string) || null;
+  const title_en = (form.get('title_en') as string) || null;
+  const excerpt_en = (form.get('excerpt_en') as string) || null;
+  const content_en = (form.get('content_en') as string) || null;
   const published = form.get('published') === 'true';
   const is_sponsored = form.get('is_sponsored') === 'true';
   const sponsor_name = is_sponsored ? ((form.get('sponsor_name') as string) || null) : null;
@@ -40,6 +46,12 @@ export const POST: APIRoute = async ({ request }) => {
     slug,
     excerpt,
     content,
+    title_es,
+    excerpt_es,
+    content_es,
+    title_en,
+    excerpt_en,
+    content_en,
     published,
     is_sponsored,
     sponsor_name,

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClientFromRequest } from '../../lib/supabase';
+import { localeFromValue } from '../../lib/i18n';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -10,11 +11,12 @@ export const POST: APIRoute = async ({ request }) => {
 
   const postId = String(form.get('post_id') ?? '').trim();
   const slug = String(form.get('slug') ?? '').trim();
+  const locale = localeFromValue(String(form.get('lang') ?? ''));
   const name = String(form.get('name') ?? '').trim();
   const email = String(form.get('email') ?? '').trim().toLowerCase();
   const content = String(form.get('content') ?? '').trim();
   const website = String(form.get('website') ?? '').trim();
-  const target = `/artigos/${encodeURIComponent(slug)}`;
+  const target = `/artigos/${encodeURIComponent(slug)}${locale === 'pt-BR' ? '' : `?lang=${locale}`}`;
 
   // Campo invisível: bots costumam preenchê-lo. Respondemos sem gravar.
   if (website) {
