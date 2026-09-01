@@ -7,6 +7,7 @@ create table if not exists home_banners (
   image_alt text not null check (char_length(image_alt) between 2 and 180),
   destination_url text not null,
   display_seconds smallint not null default 7 check (display_seconds between 3 and 30),
+  locale text not null default 'pt-BR' check (locale in ('pt-BR', 'es', 'en')),
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -19,7 +20,15 @@ create policy "public read active home banners" on home_banners
 drop policy if exists "admin all home banners" on home_banners;
 create policy "admin all home banners" on home_banners
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+alter table home_banners add column if not exists locale text;
+update home_banners set locale = 'pt-BR' where locale is null;
+alter table home_banners alter column locale set default 'pt-BR';
+alter table home_banners alter column locale set not null;
+alter table home_banners drop constraint if exists home_banners_locale_check;
+alter table home_banners add constraint home_banners_locale_check check (locale in ('pt-BR', 'es', 'en'));
+
 create index if not exists idx_home_banners_active on home_banners(active, created_at desc);
+create index if not exists idx_home_banners_active_locale on home_banners(active, locale, created_at desc);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('home-banners', 'home-banners', true, 8388608, array['image/jpeg', 'image/png', 'image/webp', 'image/avif'])

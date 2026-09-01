@@ -26,6 +26,11 @@ Para ativar as versões em espanhol e inglês em um projeto que já possui a tab
 uma única vez. Não é necessário executar `schema.sql` inteiro novamente: ele foi
 escrito para a instalação inicial e suas tabelas-base podem já existir.
 
+Para escolher banners diferentes por idioma em um projeto que já possui a tabela
+`home_banners`, execute [`supabase/home_banners.sql`](supabase/home_banners.sql)
+uma única vez. No painel, cada banner pode ser atribuído a Português (Brasil),
+Español ou English.
+
 Depois, abra cada artigo em `/admin/posts`, preencha os campos de **Español** e
 **English** e salve. O seletor `PT-BR · ES · EN` aparecerá no site; quando uma
 tradução ainda não estiver preenchida, o artigo permanece disponível em português.

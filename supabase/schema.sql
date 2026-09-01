@@ -104,6 +104,7 @@ create table home_banners (
   image_alt text not null,
   destination_url text not null,
   display_seconds smallint not null default 7 check (display_seconds between 3 and 30),
+  locale text not null default 'pt-BR' check (locale in ('pt-BR', 'es', 'en')),
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -191,3 +192,4 @@ create unique index if not exists idx_marketing_leads_email on marketing_leads(l
 create index if not exists idx_marketing_leads_active on marketing_leads(unsubscribed_at, created_at desc);
 create index if not exists idx_comments_post_approved on comments(post_id, approved, created_at desc);
 create index if not exists idx_home_banners_active on home_banners(active, created_at desc);
+create index if not exists idx_home_banners_active_locale on home_banners(active, locale, created_at desc);

@@ -21,6 +21,7 @@ const { data: banners } = await supabase
   .from('home_banners')
   .select('id, title, image_url, mobile_image_url, image_alt, destination_url, display_seconds')
   .eq('active', true)
+  .eq('locale', locale)
   .order('created_at', { ascending: false });
 ---
 
