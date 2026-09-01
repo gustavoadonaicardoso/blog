@@ -20,6 +20,8 @@ export const copy: Record<Locale, {
   articles: string;
   library: string;
   contact: string;
+  newsletter: string;
+  subscribeNewsletter: string;
   exploreArticles: string;
   contactLink: string;
   heroEyebrow: string;
@@ -58,7 +60,7 @@ export const copy: Record<Locale, {
 }> = {
   'pt-BR': {
     language: 'Idioma', home: 'Início', articles: 'Artigos', library: 'Biblioteca', contact: 'Contato',
-    exploreArticles: 'Explorar artigos', contactLink: 'Entrar em contato', heroEyebrow: 'Sinal aberto / 2026',
+    exploreArticles: 'Explorar artigos', contactLink: 'Entrar em contato', newsletter: 'Newsletter', subscribeNewsletter: 'Assinar newsletter', heroEyebrow: 'Sinal aberto / 2026',
     heroTitleFirst: 'Ideias que', heroTitleSecond: 'movem o agora.', heroDescription: 'Um espaço independente para decodificar tecnologia, cultura e as transformações do nosso tempo.',
     feedLabel: 'Feed / Atualizações', latestArticles: 'Últimos artigos',
     allArticles: 'Ver arquivo completo', readArticle: 'Ler artigo', readNow: 'Ler agora', previous: 'Anterior',
@@ -75,7 +77,7 @@ export const copy: Record<Locale, {
   },
   es: {
     language: 'Idioma', home: 'Inicio', articles: 'Artículos', library: 'Biblioteca', contact: 'Contacto',
-    exploreArticles: 'Explorar artículos', contactLink: 'Ponte en contacto', heroEyebrow: 'Señal abierta / 2026',
+    exploreArticles: 'Explorar artículos', contactLink: 'Ponte en contacto', newsletter: 'Newsletter', subscribeNewsletter: 'Suscribirse al boletín', heroEyebrow: 'Señal abierta / 2026',
     heroTitleFirst: 'Ideas que', heroTitleSecond: 'mueven el ahora.', heroDescription: 'Un espacio independiente para descifrar la tecnología, la cultura y las transformaciones de nuestro tiempo.',
     feedLabel: 'Feed / Actualizaciones', latestArticles: 'Últimos artículos',
     allArticles: 'Ver archivo completo', readArticle: 'Leer artículo', readNow: 'Leer ahora', previous: 'Anterior',
@@ -92,7 +94,7 @@ export const copy: Record<Locale, {
   },
   en: {
     language: 'Language', home: 'Home', articles: 'Articles', library: 'Library', contact: 'Contact',
-    exploreArticles: 'Explore articles', contactLink: 'Get in touch', heroEyebrow: 'Open signal / 2026',
+    exploreArticles: 'Explore articles', contactLink: 'Get in touch', newsletter: 'Newsletter', subscribeNewsletter: 'Subscribe to newsletter', heroEyebrow: 'Open signal / 2026',
     heroTitleFirst: 'Ideas that', heroTitleSecond: 'move the present.', heroDescription: 'An independent space for decoding technology, culture, and the transformations shaping our time.',
     feedLabel: 'Feed / Updates', latestArticles: 'Latest articles',
     allArticles: 'View full archive', readArticle: 'Read article', readNow: 'Read now', previous: 'Previous',

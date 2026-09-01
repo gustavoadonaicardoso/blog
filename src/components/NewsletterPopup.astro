@@ -64,6 +64,11 @@ const { data: latestPost } = await supabase
     const digits = whatsappDigits(whatsapp.value);
     whatsapp.setCustomValidity(digits.length === 10 || digits.length === 11 ? '' : 'Informe o DDD e o número com 10 ou 11 dígitos.');
   });
+  const open = () => {
+    if (!popup) return;
+    popup.hidden = false; document.body.style.overflow = 'hidden';
+    popup.querySelector<HTMLInputElement>('input')?.focus();
+  };
   const close = () => {
     if (!popup) return;
     popup.hidden = true; document.body.style.overflow = '';
@@ -71,7 +76,8 @@ const { data: latestPost } = await supabase
   };
   const dismissedAt = Number(localStorage.getItem('vortice_newsletter_dismissed') ?? 0);
   const canShow = !localStorage.getItem('vortice_newsletter_subscribed') && Date.now() - dismissedAt > 7 * 86400000;
-  if (popup && canShow) setTimeout(() => { popup.hidden = false; document.body.style.overflow = 'hidden'; popup.querySelector<HTMLInputElement>('input')?.focus(); }, 5000);
+  if (popup && canShow) setTimeout(open, 5000);
+  document.querySelectorAll<HTMLElement>('[data-newsletter-open]').forEach((trigger) => trigger.addEventListener('click', open));
   popup?.querySelector('.newsletter-close')?.addEventListener('click', close);
   popup?.addEventListener('click', (event) => { if (event.target === popup) close(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && popup && !popup.hidden) close(); });
